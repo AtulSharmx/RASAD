@@ -1,0 +1,11 @@
+{
+  "id": "osm",
+  "name": "Roads, passes and towns (OpenStreetMap, real, cached)",
+  "owner": "(c) OpenStreetMap contributors, ODbL - via the Overpass API",
+  "label": "Real data",
+  "simulated": false,
+  "target": "geometry",
+  "format": "json",
+  "path": "data/real/osm_features.json",
+  "records": "features"
+}

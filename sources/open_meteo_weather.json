@@ -2,6 +2,7 @@
   "id": "open_meteo",
   "name": "Historical weather (Open-Meteo ERA5, real, cached)",
   "owner": "Open-Meteo.com, CC BY 4.0 - downloaded once, then used offline",
+  "label": "Real data",
   "simulated": false,
   "target": "weather",
   "format": "csv",

@@ -2,6 +2,7 @@
   "id": "met_outlook",
   "name": "Weather outlook (simulated from a past year)",
   "owner": "Met feed - copy of the same dates in a past winter",
+  "label": "Simulated — weather copied from Oct 2021 onward; switch to Live mode for the real forecast",
   "simulated": true,
   "target": "weather",
   "format": "csv",

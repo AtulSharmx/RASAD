@@ -100,5 +100,8 @@ Simulated date **25 Oct 2026**, "Sector X (fictional)". Rear nodes: Leh (main de
 - Army system named **CICG** (Joint Primer, Aug 2025).
 - Private GitHub repo `RASAD`; push after every step.
 
+- **Real-data rule (5 Oct):** use real public data wherever it is free and needs no account. Military data stays simulated and is labelled "Simulated — military data is classified; in deployment this comes from CICG via adapters". Real sources added: the Open-Meteo 16-day forecast (**Live mode**), Copernicus DEM heights, and OSM roads/passes/towns. Each is its own source, marked "Real data". Anything that needs an account, a key, or a paid/free-tier plan → ask first.
+- **Modes:** `demo` (clock 25 Oct 2026, simulated outlook) and `live` (clock = today, real forecast). Every engine takes `mode` and reads through `backend/world.py`.
+
 ## 9. Skipped on purpose
 No Docker, Postgres, Redis, Celery or real auth. Configs are JSON (no YAML library needed). No truck *routing* (VRP): the problem here is *which mode*, not *which street*.

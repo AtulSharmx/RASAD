@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-type Source = { id: string; name: string; health: string; records: number | null; last_record: string | null; notes: string[]; simulated: boolean }
+type Source = { id: string; name: string; label: string; health: string; records: number | null; last_record: string | null; notes: string[]; simulated: boolean }
 
 // Step 2 placeholder: proves the backend, adapters and build work. Real screens come in Step 7.
 export default function App() {
@@ -19,7 +19,7 @@ export default function App() {
         <tbody>
           {sources.map(s => (
             <tr key={s.id}>
-              <td>{s.name}{s.simulated ? ' (simulated)' : ''}</td>
+              <td>{s.name}<br /><small>{s.label}</small></td>
               <td>{s.health}{s.notes.length ? ` - ${s.notes.join('; ')}` : ''}</td>
               <td align="right">{s.records ?? '-'}</td>
               <td>{s.last_record ?? '-'}</td>

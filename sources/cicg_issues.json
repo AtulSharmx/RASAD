@@ -2,6 +2,7 @@
   "id": "cicg_issues",
   "name": "Daily issues / consumption (CICG-like export)",
   "owner": "Army inventory system - daily export",
+  "label": "Simulated — military data is classified; in deployment this comes from CICG via adapters",
   "simulated": true,
   "target": "consumption",
   "format": "csv",

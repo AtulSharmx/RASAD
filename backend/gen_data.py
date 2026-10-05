@@ -9,7 +9,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from backend import adapters, db, weather
+from backend import adapters, db, realdata, weather, world
 
 FEEDS = db.ROOT / "data" / "feeds"
 P = db.PARAMS
@@ -40,7 +40,7 @@ SEGMENTS = {  # simulated road bulletin; anything not listed is OPEN
     "NH3-BARALACHA": ("NH-3 Baralacha La", "OPEN", "Open for all vehicles."),
     "NH3-TANGLANG": ("NH-3 Tanglang La", "OPEN", "Open for all vehicles."),
     "RHK-PA": ("Track Kilo - Alpha (Col Uniform)", "RESTD", "Fresh snow 20 cm at Col Uniform. One-way, chains required."),
-    "RHL-PD": ("Mule track Lima - Delta", "CLOSED", "Blocked by snow since 23 Oct."),
+    "RHL-PD": ("Mule track Lima - Delta", "CLOSED", "Blocked by fresh snow."),
 }
 
 
@@ -59,13 +59,11 @@ def outlook() -> pd.DataFrame:
     return out
 
 
-def consumption(rng, wx: pd.DataFrame) -> pd.DataFrame:
+def consumption(rng, wx: pd.DataFrame, posts: list[dict]) -> pd.DataFrame:
     days = pd.date_range(P["demo"]["history_start"], LAST_DAY)
     tmean = ((wx["tmax"] + wx["tmin"]) / 2).reindex(days).to_numpy()
     rows = []
-    for n in db.SECTOR["nodes"]:
-        if n["kind"] != "post":
-            continue
+    for n in posts:
         post, alt = n["id"], n["alt_m"]
         strength = np.full(len(days), n["troops"], float)
         for start in range(0, len(days), 90):  # unit rotations change strength a little
@@ -182,16 +180,25 @@ def write_placeholders() -> None:
 def main() -> None:
     print("RASAD: building demo data (seed %d)" % P["demo"]["seed"])
     weather.ensure()
+    realdata.ensure()
     FEEDS.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(P["demo"]["seed"])
+    outlook().to_csv(FEEDS / "met_outlook.csv", index=False)
 
-    out = outlook()
-    out.to_csv(FEEDS / "met_outlook.csv", index=False)
-    real = pd.read_csv(weather.WEATHER_DIR / "sector_x.csv")
-    wx = pd.concat([real, out[out.location == "sector_x"]]).assign(date=lambda d: pd.to_datetime(d["date"]))
-    wx = wx.set_index("date")
+    # 1) real data first: the simulated world is built on real terrain and weather
+    db.init(reset=True)
+    first = {c["id"] for c in adapters.configs() if not c.get("simulated", True)} | {"met_outlook"}
+    adapters.sync(first)
+    with db.connect() as con:  # real Copernicus DEM heights replace the design heights
+        for t in ("nodes", "passes"):
+            con.execute(f"UPDATE {t} SET alt_m = (SELECT elev_m FROM terrain WHERE terrain.id = {t}.id) "
+                        "WHERE id IN (SELECT id FROM terrain)")
+    posts = db.query("SELECT * FROM nodes WHERE kind = 'post' ORDER BY id")
+    wx = world.weather("sector_x", "demo")
+    wx.index = pd.to_datetime(wx.index)
 
-    cons = consumption(rng, wx)
+    # 2) simulated military feeds
+    cons = consumption(rng, wx, posts)
     cons.to_csv(FEEDS / "cicg_issues.csv", index=False)
     stk = stock(rng, cons)
     stk.to_csv(FEEDS / "cicg_stock.csv", index=False)
@@ -201,9 +208,7 @@ def main() -> None:
     airlift().to_csv(FEEDS / "iaf_airlift.csv", index=False)
     (db.ROOT / "data" / "anomaly_truth.json").write_text(json.dumps(ANOMALIES, indent=1), encoding="utf-8")
     write_placeholders()
-
-    db.init(reset=True)
-    adapters.sync()
+    adapters.sync({c["id"] for c in adapters.configs()} - first)
     for s in adapters.status():
         print(f"  {s['health']:>12}  {s['records'] or 0:>7} rows  {s['name']}" + "".join(f"\n{'':16}{n}" for n in s["notes"]))
 

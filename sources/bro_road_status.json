@@ -2,6 +2,7 @@
   "id": "bro_roads",
   "name": "Road / pass / track status (BRO-like feed)",
   "owner": "Road agency status bulletin",
+  "label": "Simulated — in deployment this comes from the BRO road-status bulletin via adapters",
   "simulated": true,
   "target": "road_status",
   "format": "json",

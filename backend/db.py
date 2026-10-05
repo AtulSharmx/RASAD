@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS road_status(segment TEXT NOT NULL, name TEXT, status 
     updated TEXT, source TEXT);
 CREATE TABLE IF NOT EXISTS airlift(date TEXT NOT NULL, sortie TEXT, aircraft TEXT, base TEXT,
     hours REAL NOT NULL, tasked_to TEXT, source TEXT);
+CREATE TABLE IF NOT EXISTS terrain(id TEXT, lat REAL NOT NULL, lon REAL NOT NULL, elev_m REAL NOT NULL,
+    source TEXT);
+CREATE TABLE IF NOT EXISTS geometry(id TEXT NOT NULL, kind TEXT NOT NULL, name TEXT, ref TEXT, ele TEXT,
+    geometry TEXT NOT NULL, source TEXT);
 CREATE TABLE IF NOT EXISTS source_runs(source TEXT, ts TEXT, ok INTEGER, records INTEGER,
     rejected INTEGER, last_record TEXT, error TEXT);
 CREATE INDEX IF NOT EXISTS ix_cons ON consumption(post, class, date);

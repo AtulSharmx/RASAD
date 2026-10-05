@@ -1,7 +1,7 @@
 """Quick check of the core logic. Run after gen_data: python -m backend.selfcheck"""
 import pandas as pd
 
-from backend import adapters, db
+from backend import adapters, db, world
 
 
 def check_adapters():
@@ -29,7 +29,22 @@ def check_demo_story():
     assert sum(d < 30 for d in days.values()) == 3, "exactly three short items"
 
 
+def check_real_data():
+    by_id = {s["id"]: s for s in adapters.status()}
+    for i in ("open_meteo", "open_meteo_forecast", "copernicus_dem", "osm"):
+        assert by_id[i]["health"] == "ok" and by_id[i]["label"] == "Real data", by_id[i]
+    assert by_id["cicg_stock"]["label"].startswith("Simulated — military data is classified")
+    dem = {r["id"]: r["elev_m"] for r in db.query("SELECT id, elev_m FROM terrain WHERE id != 'grid'")}
+    assert all(abs(n["alt_m"] - dem[n["id"]]) < 1 for n in db.query("SELECT id, alt_m FROM nodes")), "DEM heights used"
+    live, demo = world.weather("sector_x", "live"), world.weather("sector_x", "demo")
+    assert "open_meteo_forecast" in set(live["source"]) and "open_meteo_forecast" not in set(demo["source"])
+    assert live.index.is_unique and demo.index.is_unique
+    s_live, s_demo = world.stock("live"), world.stock("demo")  # Live is earlier than the demo date
+    assert (s_live["qty"].to_numpy() >= s_demo["qty"].to_numpy() - 1e-6).all()
+
+
 if __name__ == "__main__":
     check_adapters()
+    check_real_data()
     check_demo_story()
     print("selfcheck OK")

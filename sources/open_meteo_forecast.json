@@ -1,0 +1,12 @@
+{
+  "id": "open_meteo_forecast",
+  "name": "16-day weather forecast (Open-Meteo, real, cached)",
+  "owner": "Open-Meteo.com, CC BY 4.0 - used in Live mode; refresh needs internet",
+  "label": "Real data",
+  "simulated": false,
+  "target": "weather",
+  "format": "csv",
+  "path": "data/real/forecast.csv",
+  "const": {"simulated": 0},
+  "time_field": "date"
+}
