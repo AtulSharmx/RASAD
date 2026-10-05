@@ -9,6 +9,8 @@ import pandas as pd
 from backend import db
 
 MODES = ("demo", "live")
+LAPSE = 6.5 / 1000  # deg C lost per metre of height
+REF_ALT = 4000  # the sector_x weather is for 4,000 m
 
 
 def clock(mode: str = "demo") -> pd.Timestamp:

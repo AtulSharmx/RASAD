@@ -21,8 +21,16 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - API: `/api/health?mode=`, `/api/weather?location=&mode=`, `POST /api/live/refresh` (refreshes the forecast; 503 if offline), `/api/sector` now also returns OSM features.
   - Known limit: Live mode after 25 Oct 2026 has no simulated military data past that date, and the real archive is cached only up to 4 Oct 2026.
 
+- **Step 3 (5 Oct 2026): forecast + days of cover** in `backend/forecast.py`.
+  - LightGBM quantile models (P10/P50/P90) of daily use **per person**, one set per class. Inputs: post weather (sector_x minus a 6.5 °C/km lapse rate), altitude, day of year, post. × troop strength = demand. A `strength_factor` handles what-ifs.
+  - Backtest on the last 60 days vs the naive "28-day average" (WAPE). Demo result: kerosene 10% vs 39%, rations 5% vs 11%, medical 28% vs 29%, batteries 17% vs 17%, clothing 32% vs 36%. P10–P90 band coverage 70–77% (slightly narrow; say so honestly).
+  - Days of cover = days until the cumulative forecast passes the stock (P50; low = P90 demand, high = P10). Red < 7 / amber < 14 days (bad case), set in `params.json` → `cover`.
+  - Demo: Alpha kerosene **4 days** (the naive average says ~9: a cold snap is coming), Delta medical 3 days (red), Foxtrot rations 11 days (amber) = **3 posts at risk**.
+  - `forecast.run(mode)` is cached; it is cleared after a sync or a live refresh. Takes ~6 s per mode.
+  - API: `/api/forecast?mode=` (accuracy + cover), `/api/forecast/{post}?mode=&days=`.
+
 ## Next
-- Step 3: forecast per post per class (LightGBM quantiles vs a naive 28-day mean, held-out last 60 days), days of cover, accuracy in plain words. Add the checks to `backend/selfcheck.py`.
+- Step 4: Point of No Return (`backend/closure.py`). For each pass/col: fit a snowfall trigger to the real closure dates (FACTS §1), apply it to ~30 winters of real weather → closure-date distribution, shifted by this season's snow so far. Last safe dispatch = closure date at 80% confidence − transit − buffer. Show helicopter hours and the cost multiple after that date. Read through `world.py` and take `mode`.
 
 ## How to run
 - Double-click `start.bat` (the first run sets things up) and open http://localhost:8000. `reset_demo.bat` rebuilds the demo data.

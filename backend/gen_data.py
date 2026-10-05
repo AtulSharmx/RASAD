@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from backend import adapters, db, realdata, weather, world
+from backend.world import LAPSE, REF_ALT
 
 FEEDS = db.ROOT / "data" / "feeds"
 P = db.PARAMS
@@ -18,8 +19,6 @@ AS_OF = NOW.normalize() - pd.Timedelta(minutes=1)  # nightly CICG export, 24 Oct
 LAST_DAY = NOW.normalize() - pd.Timedelta(days=1)
 CODES = {"rations": "RAT", "kerosene": "SKO", "medical": "MED", "batteries_spares": "BAT", "winter_clothing": "WCL"}
 NOISE = {"rations": 0.06, "kerosene": 0.10, "medical": 0.35, "batteries_spares": 0.20, "winter_clothing": 0.40}
-LAPSE = 6.5 / 1000  # deg C lost per metre of height
-REF_ALT = 4000  # the sector_x weather is for 4,000 m
 OUTLOOK_END = pd.Timestamp("2027-06-30")
 OUTLOOK_LOCS = ["sector_x", "zojila", "baralacha", "tanglang", "leh"]
 

@@ -1,7 +1,7 @@
 """Quick check of the core logic. Run after gen_data: python -m backend.selfcheck"""
 import pandas as pd
 
-from backend import adapters, db, world
+from backend import adapters, db, forecast, world
 
 
 def check_adapters():
@@ -43,8 +43,24 @@ def check_real_data():
     assert (s_live["qty"].to_numpy() >= s_demo["qty"].to_numpy() - 1e-6).all()
 
 
+def check_forecast():
+    r = forecast.run("demo")
+    acc = r["accuracy"].set_index("class")
+    assert acc.loc["kerosene", "model_error_pct"] < acc.loc["kerosene", "naive_error_pct"], acc
+    assert (acc["model_error_pct"] <= acc["naive_error_pct"] + 2).all(), "never clearly worse than naive"
+    assert acc["band_coverage_pct"].between(60, 95).all(), acc["band_coverage_pct"]
+    c = r["cover"].set_index(["post", "class"])
+    assert c.loc[("PA", "kerosene"), "status"] == "red" and c.loc[("PD", "medical"), "status"] == "red"
+    assert sorted(set(c[c["status"] != "green"].index.get_level_values(0))) == ["PA", "PD", "PF"], "3 posts at risk"
+    assert ((c["days_low"] <= c["days"]) & (c["days"] <= c["days_high"])).all()
+    more_troops = forecast.cover("demo", forecast.forecast("demo", {"PF": 1.2})).set_index(["post", "class"])
+    assert more_troops.loc[("PF", "rations"), "days"] < c.loc[("PF", "rations"), "days"], "troops +20% => less cover"
+    assert len(forecast.run("live")["cover"]) == 40
+
+
 if __name__ == "__main__":
     check_adapters()
+    check_forecast()
     check_real_data()
     check_demo_story()
     print("selfcheck OK")

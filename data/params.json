@@ -66,6 +66,10 @@
     "porters_at": {"v": {"RH-K": 15, "RH-L": 15}, "src": "PLACEHOLDER"},
     "trucks": {"v": 10, "src": "PLACEHOLDER"}
   },
+  "cover": {
+    "red_days": {"v": 7, "src": "Team choice: red if stock may run out within 7 days (bad-case demand)"},
+    "amber_days": {"v": 14, "src": "Team choice: amber if within 14 days"}
+  },
   "closure": {
     "confidence": {"v": 0.8, "src": "Team choice: plan on the date the route is still open with 80% probability"},
     "loading_buffer_days": {"v": 1, "src": "PLACEHOLDER"}
