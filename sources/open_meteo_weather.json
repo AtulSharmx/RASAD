@@ -1,0 +1,11 @@
+{
+  "id": "open_meteo",
+  "name": "Historical weather (Open-Meteo ERA5, real, cached)",
+  "owner": "Open-Meteo.com, CC BY 4.0 - downloaded once, then used offline",
+  "simulated": false,
+  "target": "weather",
+  "format": "csv",
+  "path": "data/weather/*.csv",
+  "const": {"simulated": 0},
+  "time_field": "date"
+}

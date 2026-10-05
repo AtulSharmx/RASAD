@@ -1,0 +1,14 @@
+{
+  "id": "bro_roads",
+  "name": "Road / pass / track status (BRO-like feed)",
+  "owner": "Road agency status bulletin",
+  "simulated": true,
+  "target": "road_status",
+  "format": "json",
+  "path": "data/feeds/bro_road_status.json",
+  "records": "segments",
+  "map": {"segment": "seg_id", "status": "state", "reason": "remarks", "updated": "updated"},
+  "value_map": {"status": {"OPEN": "open", "RESTD": "restricted", "CLOSED": "closed"}},
+  "time_field": "updated",
+  "stale_after_hours": 12
+}

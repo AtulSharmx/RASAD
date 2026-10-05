@@ -1,0 +1,15 @@
+{
+  "id": "iot_fuel",
+  "name": "IoT fuel-tank level sensors",
+  "owner": "Sensors at each post, one reading every 4 hours",
+  "simulated": true,
+  "target": "stock",
+  "format": "jsonl",
+  "path": "data/feeds/iot_fuel_sensors.jsonl",
+  "map": {"post": "post_code", "qty": "fuel_litres", "as_of": "ts"},
+  "const": {"class": "kerosene", "unit": "L"},
+  "latest_by": ["post"],
+  "key_label": "sensors",
+  "time_field": "as_of",
+  "stale_after_hours": 8
+}

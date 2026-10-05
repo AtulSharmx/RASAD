@@ -1,0 +1,11 @@
+{
+  "id": "met_outlook",
+  "name": "Weather outlook (simulated from a past year)",
+  "owner": "Met feed - copy of the same dates in a past winter",
+  "simulated": true,
+  "target": "weather",
+  "format": "csv",
+  "path": "data/feeds/met_outlook.csv",
+  "const": {"simulated": 1},
+  "time_field": "date"
+}

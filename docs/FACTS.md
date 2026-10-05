@@ -82,13 +82,17 @@ Plan: download once **1990-01-01 → latest** for Leh, Kargil, Drass, Zoji La, B
 | 2026 RFI: mission range **10–20 km one way at max all-up weight**; −30 °C to +50 °C; highest band must take off from **19,000 ft** and climb 1,200–1,500 ft above ground; ≥1,000 landings, ≥7-year life; crew 2–3; autonomous/manual/return-home; ≥50% indigenous | idrw, Outlook (above) | High |
 | 2026 RFI: **payload per band is not given** in news reports | idrw, Outlook | High |
 | Dec 2022 RFI (570 drones): **LD(S) 40–80 kg payload up to 12,000 ft; LD(HA) 20–40 kg payload at 12,000–18,000 ft**; range 10–20 km one way; endurance ≥45 min; lands in a 25 m × 25 m unprepared area; must fly in "adverse wind/gust and rain/snow" | [Frontier India (16 Dec 2022)](https://frontierindia.com/last-mile-logistics-indian-army-to-procure-high-altitude-logistic-drones/) | Medium–High |
-| Fast-track RFP for 363 drones (200 medium-altitude, 163 high-altitude): payload **≥20 kg (medium), ≥15 kg (high)**; range 10 km | [Deccan Herald](https://www.deccanherald.com/india/indian-army-issues-rfp-for-procurement-of-363-drones-1154420.html), [Outlook](https://www.outlookindia.com/amp/story/national/army-issues-rfp-for-procurement-of-363-drones-news-230617) | Medium |
+| Fast-track RFP for 363 drones (163 high-altitude, 200 medium-altitude): **15 kg payload when launched at high altitude (launch up to 4,000 m / 13,000 ft); 20 kg at medium altitude (launch up to 3,000 m)**; range 10 km; all-up weight ≤100 kg; must "withstand high altitude strong wind" | [Tribune, 17 Oct 2022](https://www.tribuneindia.com/news/nation/specialised-logistics-drone-to-deliver-supplies-in-himalayas-442161), [Deccan Herald](https://www.deccanherald.com/india/indian-army-issues-rfp-for-procurement-of-363-drones-1154420.html), [Outlook](https://www.outlookindia.com/amp/story/national/army-issues-rfp-for-procurement-of-363-drones-news-230617) | High (Tribune checked directly; dated Oct 2022, not 2023) |
 | **Sabal 20** (EndureAir, in Army service): 20 kg payload, 50 km/h, 40 min endurance, >10 km range, tandem rotor | [The Defense Post (Dec 2024)](https://thedefensepost.com/2024/12/05/indian-army-sabal-drones), [Janes](https://www.janes.com/defence-news/endureair-develops-sabal-logistics-uavs) | High |
 | Sabal family 20–80 kg variants, up to 18,000 ft | [SP's Land Forces (27 Nov 2025)](https://www.spslandforces.com/experts-speak/?id=1339&h=Logistics-Drones-and-Animal-Transport) | Medium |
 | DRDO looking for a heavy-fuel VTOL logistics drone, ~200 kg payload, for high-altitude posts | [idrw](https://idrw.org/drdo-seeks-indigenous-heavy-fuel-vtol-logistics-drone-for-high-altitude-army-posts/) | Low (search summary only) |
 | No public **wind limit** for these drones was found → `PLACEHOLDER` | — | — |
 
-**What we will use (derived, conservative):** band 6–12k ft = **40 kg**, band 12–20k ft = **20 kg** (the RFI minimums), range **15 km one way** (middle of 10–20). Wind/snow limits = `PLACEHOLDER`.
+**What we will use (conservative, team decision 5 Oct 2026):**
+- Band 12,000–20,000 ft = **15 kg** (the 363-drone RFP high-altitude figure; the lowest public number).
+- Band 6,000–12,000 ft = **20 kg** (the same RFP, medium altitude).
+- Range **10 km one way** (the lowest public number). The 2026 RFI says 10–20 km, so the advisor can also show a 20 km "best case".
+- Wind and snow limits = `PLACEHOLDER`.
 
 ---
 
@@ -130,14 +134,16 @@ Rough check: road ≈ ₹10/kg (₹1 lakh ÷ 10,000 kg); helicopter ≈ ₹4 lak
 
 | Fact | Source | Conf. |
 |---|---|---|
-| IAF uses **IMMOLS**, Navy uses **ILMS**, Army uses **CICP** (Computerised Inventory Control Project, Army Ordnance Corps, sanctioned 2001). They are separate; joining them "would be a challenge" | [CLAWS special report 2018](https://archive.claws.co.in/images/events/pdf/643029217_SR-(Final)RevolutioninMilitaryLogistics-12-6-18.pdf), [India Foundation brief 2018](https://indiafoundation.in/wp-content/uploads/2019/08/Issue-Brief-4-_Oct-2018.pdf) | Medium (seen in search summaries; PDF text not extracted) |
-| **Correction to the brief:** public sources call the Army system **CICP**, not "CICG". We will say "CICP-like feed". | as above | Medium |
+| **Joint Primer for Integrated Logistics**, released by **HQ Integrated Defence Staff (MoD), August 2025**, under CDS Gen Anil Chauhan; prepared by the College of Defence Management | [PIB via GlobalSecurity, 10 Aug 2025](https://www.globalsecurity.org/wmd/library/news/india/2025/india-250810-india-pib03.htm), [Security Risks summary (Nishqa Devadiga)](https://www.security-risks.com/post/inside-india-s-joint-primer-for-integrated-logistics-a-strategic-blueprint-for-military-transformat) | High (release); Medium (contents: from the summary, not the primer itself) |
+| Per the primer: Army uses **CICG** (Computerised Inventory Control Group), Navy uses **ILMS** (Integrated Logistics Management System), IAF uses **IMMOLS** (Integrated Material Management On-Line System). The summary spells it "IMMOS", but Air HQ's own directorate is named IMMOLS ([Bharat Rakshak](https://www.bharat-rakshak.com/indianairforce/database/units/list.php?qunit=IMM+AHQ)) | Security Risks summary | Medium |
+| These systems give **no visibility of each other's assets** ("none of which give the other services visibility into their assets") | Security Risks summary | Medium |
+| The primer recommends **"API based interoperability that does not disrupt existing platforms"**, plus palletisation, containerisation, **QR code traceability and RFID-based inventory management** | Security Risks summary | Medium |
+| The primer names six areas: transportation; IT; common platforms/systems; maintenance philosophy; indigenisation/procurement; central warehousing with joint planning | Security Risks summary | Medium |
+| Older reports (2018) call the Army's programme **CICP** (Computerised Inventory Control Project, Army Ordnance Corps, sanctioned 2001) and say joining it with ILMS/IMMOLS "would be a challenge". CICG is the name the primer uses, so **we will say "CICG-like feed"** | [CLAWS special report 2018](https://archive.claws.co.in/images/events/pdf/643029217_SR-(Final)RevolutioninMilitaryLogistics-12-6-18.pdf), [India Foundation brief 2018](https://indiafoundation.in/wp-content/uploads/2019/08/Issue-Brief-4-_Oct-2018.pdf) | Medium |
 | IAF IMMOLS sanctioned 1995, live in all IAF units by 2006 | [Scribd e-wings](https://www.scribd.com/document/88219885/e-wings) | Low |
 | **IQMP** (Integrated Quartermaster Package, DGIS + TCS): unit-level web app, 12 logistics modules, exchanges data via a Central Management Application at Army HQ | [Aviation Defence Universe](https://www.aviation-defence-universe.com/indian-army-gets-beta-version-of-integrated-quartermaster-package-iqmp/) | Medium |
 | **Q-FORCE** (22 May 2026): Army app for logistics and sustainment that integrates "multiple logistics and inventory platforms" | [AIR News](https://newsonair.gov.in/indian-army-launches-q-force-application-for-logistics-and-sustainment-management/) | High |
-| The "tri-service primer" that recommends API interoperability and QR/RFID: **we could not find it publicly**. Please send us the document or link; until then we will not quote it | — | — |
-
-**Pitch line:** RASAD does not replace CICP / IQMP / Q-FORCE. It reads their exports through adapters ("add one config file") and gives the commander one picture.
+**Pitch line:** RASAD does exactly what the Joint Primer asks: API/adapter-based interoperability that does not disrupt existing systems. It does not replace CICG / ILMS / IMMOLS / IQMP / Q-FORCE. It reads their exports through adapters ("add one config file") and gives the commander one picture.
 
 ---
 
@@ -162,5 +168,6 @@ Rough check: road ≈ ₹10/kg (₹1 lakh ÷ 10,000 kg); helicopter ≈ ₹4 lak
 - 2,715-drone RFI, 3 bands, Aug 2026 — **confirmed** (High).
 - Mule disbanding deferred — **confirmed** (Medium; one expert article citing "inputs").
 - 2 lakh tonnes, ~6 months of AWS — **confirmed** (Medium; 2020 article).
-- "CICG" → public name is **CICP**.
-- Tri-service primer (API + QR/RFID) — **not found publicly**; we need the source from the team.
+- "CICG" — **correct as named in the Joint Primer (Aug 2025)**; older 2018 papers say CICP.
+- Tri-service primer (API + QR/RFID, no cross-visibility) — **confirmed** via a summary of the HQ IDS Joint Primer, Aug 2025 (Medium; the primer text itself was not read).
+- Drone payload for the 12,000–20,000 ft band: **15 kg** (Tribune, Oct 2022 RFP).
