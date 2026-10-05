@@ -1,0 +1,13 @@
+{
+  "_note": "REAL closure / reopening dates from public reports (sources and confidence in docs/FACTS.md section 1). Winter 2025-26 on Zoji La is left out of the fit: it was not a sustained closure (only ~4-6 days).",
+  "ZOJILA": {
+    "weather": "zojila",
+    "closed": ["2020-12-31", "2022-01-04", "2023-01-06", "2024-01-26", "2025-02-28"],
+    "reopened": ["2021-02-28", "2022-03-19", "2023-03-16", "2024-03-20", "2025-04-01"]
+  },
+  "BARALACHA": {
+    "weather": "baralacha",
+    "closed": ["2021-11-02", "2022-11-07", "2023-11-20", "2025-11-20"],
+    "reopened": ["2021-03-29", "2022-03-26", "2023-03-25", "2024-04-23", "2026-05-12"]
+  }
+}

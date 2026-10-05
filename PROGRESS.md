@@ -38,8 +38,20 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - Safety: `python -m backend.safety_check` → `docs/SAFETY_CHECK.md`. Natural Earth boundary lines are used in memory only (never saved or shown). Every fictional site is ≥54 km from any boundary/LoC/LAC (posts ≥60 km) and ≥12.7 km from any military feature mapped in OSM. ALL OK.
   - Git: `credential.helper manager`. Run `git push` **without** a `timeout` wrapper (the login window needs it), ideally in the background.
 
+- **Step 4 (5 Oct 2026): Point of No Return** in `backend/closure.py`. Real closure dates are in `data/closures.json`.
+  - Rule fitted on REAL closures: a route closes when (snow so far ≥ C AND 3-day snow ≥ D) OR the 7-day mean temperature ≤ T.
+    - Zoji La: C=210 cm, D=20 cm, T=−15.5 °C (a snow pass); fit error 5.4 days, leave-one-winter-out 12.6 days (n=5).
+    - Manali–Leh (Baralacha): D=44 cm, T=−15.5 °C (a cold/ice pass); fit error 7.5 days, leave-one-out 17.8 days (n=4).
+  - This season so far (+ the real forecast in Live mode) is replayed against 31 real past winters (1995–2025) → closure-date distribution. Last safe dispatch = 20th percentile closure (80% still open) − transit − 1 day buffer. Storms before today do not count; the road feed already tells us whether they closed the route.
+  - Forward roads and tracks use the Manali–Leh rule at their highest point (temperature lapse rate), with PLACEHOLDER snow-threshold factors (road 0.8, jeep 0.5, mule 0.4) and reopening 30 days after Manali–Leh.
+  - After the PNR: helicopter from Leh (payload by helipad height, ~Rs 4 lakh per 45 min), with porters when the post has no helipad; cost per kg vs the road; ~72% of past winter days were inside the helicopter weather limits.
+  - Winter stock: non-short items are stocked until 15 Jun 2027 (+5–20%), so only the 3 designed items are short. Charlie's medical surge was moved to 8–14 Sep (outside the 28-day window).
+  - Demo result: Manali–Leh closes 2 / 13 / 24 Nov (P20/50/80); Zoji La 10 Dec / 31 Dec / 12 Jan. Alpha kerosene: last safe truck + jeep dispatch **29 Oct** (80%), then ~220× cost (40 t → 77 sorties, ~Rs 3.4 crore). Foxtrot rations: last safe dispatch **today (25 Oct)**. Delta medical: track closed → **air only now** (drones next).
+  - API: `/api/pnr?mode=` (items, axes, daily P(closed) curves per post). Self-check covers it.
+
 ## Next
-- Step 4: Point of No Return (`backend/closure.py`). For each pass/col: fit a snowfall trigger to the real closure dates (FACTS §1), apply it to ~30 winters of real weather → closure-date distribution, shifted by this season's snow so far. Last safe dispatch = closure date at 80% confidence − transit − buffer. Show helicopter hours and the cost multiple after that date. Read through `world.py` and take `mode`.
+- Step 5: mixed-fleet planner (`backend/planner.py`, OR-Tools CP-SAT). For the next 7 days: which mode (truck/jeep, helicopter, mule, porter, drone) carries which load. Inputs: PNR items and shortfalls, `/api/forecast` cover, fleet and limits in `params.json`, weather windows from `world.weather`, road status, airlift allotment. Every line gets a plain reason and its cost. Medical/urgent first.
+- Then Step 6: drone advisor + what-ifs.
 
 ## How to run
 - Double-click `start.bat` (the first run sets things up) and open http://localhost:8000. `reset_demo.bat` rebuilds the demo data.

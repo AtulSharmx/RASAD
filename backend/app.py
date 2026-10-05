@@ -7,7 +7,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 
-from backend import adapters, db, forecast, realdata, world
+from backend import adapters, closure, db, forecast, realdata, world
 
 app = FastAPI(title="RASAD", docs_url="/api/docs")
 
@@ -44,8 +44,20 @@ def live_refresh():
     except (urllib.error.URLError, TimeoutError) as e:
         raise HTTPException(503, f"No internet - still using the cached forecast ({e})")
     adapters.sync({"open_meteo_forecast"})
-    forecast.clear()
+    clear_caches()
     return adapters.status()
+
+
+def clear_caches() -> None:
+    """Results depend on the data; recompute after any reload."""
+    forecast.clear()
+    closure.run.cache_clear()
+
+
+@app.get("/api/pnr")
+def pnr(mode: str = "demo"):
+    """Point of No Return: closure windows, last safe dispatch and the cost of air after it."""
+    return closure.run(mode)
 
 
 @app.get("/api/forecast")
@@ -80,7 +92,7 @@ def sources():
 @app.post("/api/sources/sync")
 def sync():
     adapters.sync()
-    forecast.clear()
+    clear_caches()
     return adapters.status()
 
 

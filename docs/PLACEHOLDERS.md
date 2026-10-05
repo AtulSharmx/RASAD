@@ -16,9 +16,13 @@ Numbers we could **not** find in a public source. They are made up for the proto
 | `classes.winter_clothing.per_man_day` | 0.05 | replacement rate |
 | `modes.truck.payload_kg` | 2500 | light truck on forward roads |
 | `modes.truck.jeep_payload_kg` | 800 | light vehicle on jeep tracks |
+| `modes.truck.jeep_speed_kmh` | 10 | jeep track average |
+| `modes.truck.jeep_cost_factor` | 4 | cost per kg-km on jeep tracks compared with trucks |
+| `modes.truck.drive_hours_per_day` | 8 | daylight driving hours in mountains |
 | `modes.truck.speed_kmh` | 25 | mountain road average |
 | `modes.helicopter.payload_kg_by_alt_m` | [[3500, 1000], [4500, 600], [5500, 300], [6400, 200]] | curve; the 200 kg at ~21,000 ft point is the public Dhruv requirement (FACTS 5) |
 | `modes.helicopter.speed_kmh` | 180 | - |
+| `modes.helicopter.handling_hours` | 0.25 | loading and unloading time per sortie |
 | `modes.helicopter.max_wind_kmh` | 55 | - |
 | `modes.helicopter.max_snowfall_cm` | 2 | - |
 | `modes.helicopter.max_cloud_pct` | 85 | proxy for visibility (Open-Meteo archive has no visibility) |
@@ -38,6 +42,9 @@ Numbers we could **not** find in a public source. They are made up for the proto
 | `fleet.porters_at` | {"RH-K": 15, "RH-L": 15} | - |
 | `fleet.trucks` | 10 | - |
 | `closure.loading_buffer_days` | 1 | - |
+| `closure.threshold_factor` | {"road": 0.8, "jeep_track": 0.5, "mule_track": 0.4} | forward roads and tracks are not cleared like national highways, so they close at this fraction of the fitted Manali-Leh snow threshold |
+| `closure.snow_per_1000m` | 0.3 | extra snowfall share per 1,000 m above 4,000 m |
+| `closure.track_reopen_lag_days` | 30 | forward roads and tracks reopen this long after the Manali-Leh highway |
 
 ## Everything simulated for the prototype
 
