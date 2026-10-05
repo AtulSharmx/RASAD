@@ -5,9 +5,10 @@ import urllib.error
 import pandas as pd
 
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 from fastapi.staticfiles import StaticFiles
 
-from backend import adapters, closure, db, forecast, realdata, world
+from backend import adapters, closure, db, forecast, planner, realdata, world
 
 app = FastAPI(title="RASAD", docs_url="/api/docs")
 
@@ -52,6 +53,7 @@ def clear_caches() -> None:
     """Results depend on the data; recompute after any reload."""
     forecast.clear()
     closure.run.cache_clear()
+    planner.run.cache_clear()
 
 
 @app.get("/api/pnr")
@@ -60,12 +62,44 @@ def pnr(mode: str = "demo"):
     return closure.run(mode)
 
 
+@app.get("/api/plan")
+def plan(mode: str = "demo"):
+    """Mixed-fleet plan for the next 7 days, with the current Approve / Modify / Reject status of each line."""
+    return planner.with_decisions(planner.run(mode))
+
+
+class Decision(BaseModel):
+    key: str = Field(max_length=200)
+    action: str = Field(pattern="^(approve|modify|reject)$")
+    role: str = Field(pattern="^(Commander|Logistics Officer|Post QM)$")
+    user: str = Field(min_length=1, max_length=60)
+    kg: float | None = Field(default=None, ge=0)
+    note: str = Field(default="", max_length=500)
+
+
+@app.post("/api/plan/decision")
+def decision(d: Decision, mode: str = "demo"):
+    try:
+        return planner.decide(mode, d.key, d.action, d.role, d.user, d.kg, d.note)
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.get("/api/audit")
+def audit(limit: int = 200):
+    return db.query("SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (min(limit, 1000),))
+
+
 @app.get("/api/forecast")
 def forecast_summary(mode: str = "demo"):
     r = forecast.run(mode)
     return {"accuracy": records(r["accuracy"]), "cover": records(r["cover"]),
             "note": "Accuracy is measured on simulated consumption data; real accuracy is known only on real CICG data. "
-                    "The method is chosen on the same 60 days it is scored on, so the score is slightly optimistic."}
+                    "The method and band are chosen on an earlier 60-day window; the score is from the final 60 days only."}
 
 
 @app.get("/api/forecast/{post}")

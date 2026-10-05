@@ -171,6 +171,18 @@ def _flyable_share() -> float:
     return round(100 * float(ok.mean()), 0)
 
 
+def cost_basis(road_per_kg: float, air_per_kg: float) -> str:
+    """The inputs behind every cost multiple, shown next to it (never a bare 'x times')."""
+    return (f"road Rs {road_per_kg:.1f}/kg vs helicopter Rs {air_per_kg:,.0f}/kg; inputs: truck Rs 1 lakh per 10 t "
+            "Srinagar-Leh round trip, helicopter Rs 4 lakh per 45-min sortie (The Week, 2020); PLACEHOLDER")
+
+
+COST_INPUTS = {"truck_inr_per_kg_km": M["truck"]["cost_inr_per_kg_km"]["v"],
+               "truck_basis": "Rs 1 lakh per 10-tonne round trip, Srinagar-Leh (~420 km)",
+               "heli_inr_per_sortie_45min": 400000, "heli_inr_per_hour": M["helicopter"]["cost_inr_per_hour"]["v"],
+               "source": "The Week, 13 Aug 2020 (retired officer quoted)", "tag": "PLACEHOLDER"}
+
+
 def _air(post: dict, nodes: dict) -> dict:
     """Helicopter from Leh to the post's helipad (or the nearest one, then porters)."""
     pads = [n for n in nodes.values() if n["helipad"] and n["kind"] != "depot"]
@@ -227,17 +239,23 @@ def run(mode: str = "demo") -> dict:
             sorties = math.ceil(short_kg / air["payload_kg"]) if short_kg else 0
             multiple = air["inr_per_kg"] / road_per_kg
             days_left = last_safe - today
-            status = ("stocked" if short == 0 else "passed" if days_left < 0 else
-                      "urgent" if days_left <= 7 else "watch")
+            short_days = short / max(float(g["p50"].iloc[0]), 1e-9)  # the gap in days of today's use
+            status = ("stocked" if short == 0 else "margin" if short_days < CP["margin_days"]["v"] else
+                      "passed" if days_left < 0 else "urgent" if days_left <= 7 else "watch")
             name = f"{nodes[post]['name']} {c['label'].lower()}"
             if status == "stocked":
                 headline = f"{name}: stocked until the route reopens (~{date(reopen)})."
+            elif status == "margin":
+                headline = (f"{name}: forecast gap of {short:,.0f} {c['unit']} (~{short_days:.0f} days of use) is "
+                            f"within the {CP['margin_days']['v']}-day forecast margin; review at the next update.")
             elif status == "passed":
                 headline = (f"{name}: the ground route is already closed or will close before a convoy arrives. "
-                            f"Air maintenance needed now, ~{multiple:.0f}x the road cost.")
+                            f"Air maintenance needed now, ~{multiple:.0f}x the road cost "
+                            f"({cost_basis(road_per_kg, air['inr_per_kg'])}).")
             else:
                 headline = (f"{name}: last safe {by} dispatch {pd.Timestamp(date(last_safe)):%d %b} "
-                            f"({CP['confidence']['v']:.0%} confidence). After that: air maintenance, ~{multiple:.0f}x cost.")
+                            f"({CP['confidence']['v']:.0%} confidence). After that: air maintenance, ~{multiple:.0f}x cost "
+                            f"({cost_basis(road_per_kg, air['inr_per_kg'])}).")
             items.append({
                 "post": post, "post_name": nodes[post]["name"], "class": cls, "label": c["label"], "unit": c["unit"],
                 "status": status, "headline": headline, "dispatch_by": by, "route": [l["id"] for l in route][::-1],
@@ -249,7 +267,8 @@ def run(mode: str = "demo") -> dict:
                 "need_until_reopen": round(need, 1), "need_until_reopen_p90": round(need_hi, 1),
                 "shortfall": round(short, 1), "shortfall_kg": round(short_kg),
                 "road_inr_per_kg": round(road_per_kg, 1), "air_inr_per_kg": round(air["inr_per_kg"]),
-                "cost_multiple": round(multiple), "air_pad": air["pad"], "heli_payload_kg": air["payload_kg"],
+                "cost_multiple": round(multiple), "cost_basis": cost_basis(road_per_kg, air["inr_per_kg"]),
+                "cost_inputs": COST_INPUTS, "air_pad": air["pad"], "heli_payload_kg": air["payload_kg"],
                 "heli_sorties": sorties, "heli_hours": round(sorties * air["sortie_hours"], 1),
                 "air_cost_inr_lakh": round(short_kg * air["inr_per_kg"] / 1e5, 1),
                 "flyable_winter_pct": flyable})
@@ -262,7 +281,7 @@ def run(mode: str = "demo") -> dict:
                      "closure_p80": date(np.percentile(s["days"], 80, method="lower")),
                      "no_closure_share": round(float(np.mean(s["days"] >= SEASON_DAYS)), 2),
                      "reopen_p80": date(s["reopen_day"]), "rule": fit(seg_id.split("-")[1])})
-    order = {"passed": 0, "urgent": 1, "watch": 2, "stocked": 3}
+    order = {"passed": 0, "urgent": 1, "watch": 2, "margin": 3, "stocked": 4}
     items.sort(key=lambda r: (order[r["status"]], r["days_left"]))
     return {"items": items, "axes": axes, "curves": curves, "flyable_winter_pct": flyable,
             "winters_replayed": len(WINTERS), "confidence": CP["confidence"]["v"]}

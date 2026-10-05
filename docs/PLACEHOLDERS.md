@@ -29,6 +29,9 @@ Numbers we could **not** find in a public source. They are made up for the proto
 | `modes.drone.cost_inr_per_sortie` | 1500 | battery, wear and crew time |
 | `modes.drone.max_wind_kmh` | 35 | no public wind limit found |
 | `modes.drone.max_snowfall_cm` | 1 | - |
+| `modes.drone.handling_min` | 10 | load, battery swap, unload per sortie |
+| `modes.drone.op_hours_per_day` | 8 | daylight flying hours |
+| `modes.drone.max_sorties_per_day` | 12 | battery cycles per drone per day |
 | `modes.mule.speed_kmh` | 2.5 | - |
 | `modes.mule.cost_inr_per_trip_km` | 150 | - |
 | `modes.mule.max_snow_depth_m` | 0.6 | track usable below this snow depth |
@@ -41,6 +44,7 @@ Numbers we could **not** find in a public source. They are made up for the proto
 | `fleet.mules_at` | {"RH-K": 20, "RH-L": 20} | - |
 | `fleet.porters_at` | {"RH-K": 15, "RH-L": 15} | - |
 | `fleet.trucks` | 10 | - |
+| `fleet.jeeps` | 12 | light vehicles for jeep tracks |
 | `closure.loading_buffer_days` | 1 | - |
 | `closure.threshold_factor` | {"road": 0.8, "jeep_track": 0.5, "mule_track": 0.4} | forward roads and tracks are not cleared like national highways, so they close at this fraction of the fitted Manali-Leh snow threshold |
 | `closure.snow_per_1000m` | 0.3 | extra snowfall share per 1,000 m above 4,000 m |

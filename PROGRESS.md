@@ -49,9 +49,26 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - Demo result: Manali–Leh closes 2 / 13 / 24 Nov (P20/50/80); Zoji La 10 Dec / 31 Dec / 12 Jan. Alpha kerosene: last safe truck + jeep dispatch **29 Oct** (80%), then ~220× cost (40 t → 77 sorties, ~Rs 3.4 crore). Foxtrot rations: last safe dispatch **today (25 Oct)**. Delta medical: track closed → **air only now** (drones next).
   - API: `/api/pnr?mode=` (items, axes, daily P(closed) curves per post). Self-check covers it.
 
+- **Fixes before Step 5 (5 Oct 2026):**
+  - No selection leak: the method and band factor are chosen on the earlier 60 days (27 Jun–25 Aug); the score comes only from the final 60 days (26 Aug–24 Oct). Now only kerosene uses the model (select window 8.5% vs 55%; test 9.0% vs 39.3%). Rations, clothing, medical and batteries use the 28-day average. Test coverage is 79–89%.
+  - Every cost multiple carries its inputs: `closure.cost_basis()` text + `cost_inputs` (truck Rs 1 lakh per 10 t, helicopter Rs 4 lakh per 45-min sortie, The Week 2020, PLACEHOLDER). The "~40×" wording in `docs/PLAN.md` was replaced with computed numbers.
+  - New PNR status `margin`: a winter gap smaller than 14 days of current use (`closure.margin_days`) is inside the forecast error, so it is flagged for review, not urgent. This is needed because the 28-day average stretches October's clothing issue season over the whole winter.
+- **Step 5 (5 Oct 2026): mixed-fleet planner** in `backend/planner.py` (OR-Tools CP-SAT, 7-day horizon, deterministic).
+  - Loads are the PNR items with status passed/urgent. Options: truck/jeep (to road/jeep-track posts), mule, porter, helicopter (Leh → helipad, or nearest pad + porters), drone (bases in `fleet.drones_at`; range 10 km; leg must clear DEM terrain + 400 m below the 20,000 ft ceiling; 15 kg in the high band).
+  - Rules: ground options only on days ≤ last safe dispatch and never on a closed route. Fleet limits: jeeps 12/day, trucks 10 × 2.5 t/day, mules/porters per roadhead using round-trip days, helicopter hours from the airlift allotment on flyable days, drone minutes and battery cycles per base. Weather windows come from `world.weather` (helicopter: gust ≤55, snow ≤2, cloud ≤85; drone: gust ≤35, snow ≤1; all PLACEHOLDER).
+  - Objective: cost + a penalty for undelivered kg + a delay penalty (×10 after the post would run out). The penalties are team choices in `params.json` → `planner`.
+  - Demo plan (Rs 1.84 crore in total):
+    - Delta medicine 274 kg by drone, 19 sorties on 26 Oct (drones grounded on 25 Oct by snow), ~13× cheaper than helicopter + porters.
+    - Alpha kerosene: ~38 t by jeep on 25–28 Oct plus 1.7 t by mule.
+    - Foxtrot rations: 800 kg by mule and 220 kg by porter today, then 11.9 t in 30 helicopter sorties (drones 19 km away, out of range).
+    - Alpha clothing 252 kg by jeep. Echo clothing is on "watch".
+  - Each line has a summary, a plain reason, a cost and assumptions with tags (PLACEHOLDER / public source).
+  - **Commander in the loop:** tables `decisions` and `audit_log`. `POST /api/plan/decision` takes `{key, action: approve|modify|reject, role, user, kg?, note?}`. Approve/reject is for the Commander only; modify is for the Commander or the Logistics Officer; the Post QM gets 403. Every action goes to `GET /api/audit`. Approving a modified line keeps the modified kg. `reset_demo.bat` clears decisions.
+  - API: `GET /api/plan?mode=` (cached solve + fresh decisions). The self-check covers all of the above, then removes its own test decisions.
+
 ## Next
-- Step 5: mixed-fleet planner (`backend/planner.py`, OR-Tools CP-SAT). For the next 7 days: which mode (truck/jeep, helicopter, mule, porter, drone) carries which load. Inputs: PNR items and shortfalls, `/api/forecast` cover, fleet and limits in `params.json`, weather windows from `world.weather`, road status, airlift allotment. Every line gets a plain reason and its cost. Medical/urgent first.
-- Then Step 6: drone advisor + what-ifs.
+- Step 6: drone advisor (`backend/drones.py`): for N drones of a band, rank candidate bases (roadheads, Node Mike, helipad posts) by the helicopter hours, porter/mule trips and stock-out risk they would save over the winter, using real flyable days. Re-use `planner._leg_top`, `planner._band_payload`, `closure._air`.
+- Step 6: what-ifs (`backend/scenarios.py`): pass closes 10 days early (shift closure days in `closure.segment`), blizzard grounds helicopters 3 days (`planner.plan(grounded_days=3)`), troops +20% at Alpha–Charlie (`forecast.forecast(strength_factor=...)`), 20 high-altitude drones arrive (`planner.plan(drones_at=...)`). Show before vs after.
 
 ## How to run
 - Double-click `start.bat` (the first run sets things up) and open http://localhost:8000. `reset_demo.bat` rebuilds the demo data.

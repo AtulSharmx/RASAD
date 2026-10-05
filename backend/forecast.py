@@ -90,40 +90,48 @@ def _calibrate(p: np.ndarray, y: np.ndarray) -> float:
 
 @functools.lru_cache(maxsize=4)
 def evaluate(mode: str = "demo") -> tuple[pd.DataFrame, dict]:
-    """Scores both methods on the last 60 days, picks one per class and calibrates its band.
-    Honest coverage: the band factor used for scoring comes from the 60 days BEFORE the hold-out.
-    The factor used for the live forecast is then re-fitted on the latest 60 days."""
+    """Two windows, no leak:
+    - SELECT window (the 60 days before the final 60): pick the method per class and set its band factor.
+    - TEST window (the final 60 days, never used for any choice): report error and coverage.
+    The live forecast then re-fits the band factor on the latest 60 days."""
     now = world.clock(mode).normalize()
-    hold, cal = now - WINDOW * DAY, now - 2 * WINDOW * DAY
+    hold, sel = now - WINDOW * DAY, now - 2 * WINDOW * DAY
     hist = _history(mode, _frame(mode, now - DAY))
+    wape = lambda p, d: 100 * np.abs(p[:, 1] * d["strength"].to_numpy() - d["qty"].to_numpy()).sum() / d["qty"].sum()
     rows, choice = [], {}
     for cls, h in hist.groupby("class"):
-        cal_set, test = h[(h["date"] >= cal) & (h["date"] < hold)], h[h["date"] >= hold]
-        y, qty, men = test["rate"].to_numpy(), test["qty"].to_numpy(), test["strength"].to_numpy()
+        sel_set, test = h[(h["date"] >= sel) & (h["date"] < hold)], h[h["date"] >= hold]
+        y = test["rate"].to_numpy()
         res = {}
         for m, (_, fn) in METHODS.items():
-            k_eval = _calibrate(fn(h[h["date"] < cal], cal_set), cal_set["rate"].to_numpy())
+            raw_sel = fn(h[h["date"] < sel], sel_set)
+            k_sel = _calibrate(raw_sel, sel_set["rate"].to_numpy())
             raw = fn(h[h["date"] < hold], test)
-            res[m] = {"error": 100 * np.abs(raw[:, 1] * men - qty).sum() / qty.sum(),
-                      "cov_raw": 100 * _coverage(raw, y), "cov": 100 * _coverage(_widen(raw, k_eval), y),
+            res[m] = {"sel_error": wape(raw_sel, sel_set), "error": wape(raw, test),
+                      "cov_raw": 100 * _coverage(raw, y), "cov": 100 * _coverage(_widen(raw, k_sel), y),
                       "k": _calibrate(raw, y)}
-        gain = res["naive"]["error"] - res["model"]["error"]
+        gain = res["naive"]["sel_error"] - res["model"]["sel_error"]
         use = "model" if gain >= MIN_GAIN else "naive"
         choice[cls] = (use, res[use]["k"])
         if use == "model":
-            why = f"it was {gain:.0f} percentage point{'' if round(gain) == 1 else 's'} more accurate than the 28-day average"
+            why = (f"on the earlier 60 days it was {gain:.0f} percentage point{'' if round(gain) == 1 else 's'} "
+                   "more accurate than the 28-day average")
         else:
-            why = (f"the model was not clearly better ({res['model']['error']:.0f}% vs "
-                   f"{res['naive']['error']:.0f}% error), so the simpler method is used")
+            why = (f"on the earlier 60 days the model was not clearly better ({res['model']['sel_error']:.0f}% vs "
+                   f"{res['naive']['sel_error']:.0f}% error), so the simpler method is used")
         label, r = db.PARAMS["classes"][cls]["label"], res[use]
         rows.append({
             "class": cls, "label": label, "method": METHODS[use][0], "why": why,
+            "select_model_error_pct": round(res["model"]["sel_error"], 1),
+            "select_naive_error_pct": round(res["naive"]["sel_error"], 1),
             "model_error_pct": round(res["model"]["error"], 1), "naive_error_pct": round(res["naive"]["error"], 1),
             "error_pct": round(r["error"], 1), "coverage_before_pct": round(r["cov_raw"], 1),
             "coverage_pct": round(r["cov"], 1), "band_factor": r["k"],
+            "select_from": sel.date().isoformat(), "select_to": (hold - DAY).date().isoformat(),
             "test_from": hold.date().isoformat(), "test_to": (now - DAY).date().isoformat(),
-            "plain": f"{label}: using the {METHODS[use][0]} because {why}. Typical daily error {r['error']:.0f}%. "
-                     f"{r['cov']:.0f}% of real days fell inside the calibrated band (aim: 80%)."})
+            "plain": f"{label}: using the {METHODS[use][0]} because {why}. On the final 60 days (not used for any "
+                     f"choice) its typical daily error was {r['error']:.0f}% and {r['cov']:.0f}% of real days fell "
+                     "inside the band (aim: 80%)."})
     return pd.DataFrame(rows), choice
 
 
