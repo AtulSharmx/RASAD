@@ -66,6 +66,9 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - **Commander in the loop:** tables `decisions` and `audit_log`. `POST /api/plan/decision` takes `{key, action: approve|modify|reject, role, user, kg?, note?}`. Approve/reject is for the Commander only; modify is for the Commander or the Logistics Officer; the Post QM gets 403. Every action goes to `GET /api/audit`. Approving a modified line keeps the modified kg. `reset_demo.bat` clears decisions.
   - API: `GET /api/plan?mode=` (cached solve + fresh decisions). The self-check covers all of the above, then removes its own test decisions.
 
+## Known limits (say these honestly)
+- **Roles are demo-only.** The brief asks for demo roles with no real login, so `role` and `user` come from the request (the role picker). Anyone who can reach the API can claim "Commander". Mitigations: the server listens only on 127.0.0.1, and FastAPI parses only JSON bodies, which blocks simple cross-site form posts. Production would take the identity from Army SSO/PKI and map roles on the server. An automated security review flagged this on 5 Oct; it was acknowledged and documented, not fixed (by design for the demo).
+
 ## Next
 - Step 6: drone advisor (`backend/drones.py`): for N drones of a band, rank candidate bases (roadheads, Node Mike, helipad posts) by the helicopter hours, porter/mule trips and stock-out risk they would save over the winter, using real flyable days. Re-use `planner._leg_top`, `planner._band_payload`, `closure._air`.
 - Step 6: what-ifs (`backend/scenarios.py`): pass closes 10 days early (shift closure days in `closure.segment`), blizzard grounds helicopters 3 days (`planner.plan(grounded_days=3)`), troops +20% at Alpha–Charlie (`forecast.forecast(strength_factor=...)`), 20 high-altitude drones arrive (`planner.plan(drones_at=...)`). Show before vs after.

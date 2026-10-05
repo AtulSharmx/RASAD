@@ -1,16 +1,18 @@
 """RASAD API + the built web app, on http://localhost:8000 (this machine only)."""
 import json
 import urllib.error
+from typing import Literal
 
 import pandas as pd
-
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import FastAPI, HTTPException, Path, Query
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
 from backend import adapters, closure, db, forecast, planner, realdata, world
 
 app = FastAPI(title="RASAD", docs_url="/api/docs")
+Mode = Literal["demo", "live"]  # only two modes: anything else is refused (each mode is cached and costly)
+Location = Literal["leh", "kargil", "drass", "zojila", "baralacha", "tanglang", "sector_x"]
 
 
 def records(df) -> list[dict]:
@@ -19,7 +21,7 @@ def records(df) -> list[dict]:
 
 
 @app.get("/api/health")
-def health(mode: str = "demo"):
+def health(mode: Mode = "demo"):
     return {"ok": True, "mode": mode, "now": world.clock(mode).isoformat(), "sector": db.SECTOR["label"],
             "note": "Runs fully on-premise. Military data is simulated; weather, terrain and roads are real."}
 
@@ -33,7 +35,7 @@ def sector():
 
 
 @app.get("/api/weather")
-def weather(location: str = "sector_x", mode: str = "demo"):
+def weather(location: Location = "sector_x", mode: Mode = "demo"):
     return world.weather(location, mode).reset_index().to_dict("records")
 
 
@@ -57,17 +59,20 @@ def clear_caches() -> None:
 
 
 @app.get("/api/pnr")
-def pnr(mode: str = "demo"):
+def pnr(mode: Mode = "demo"):
     """Point of No Return: closure windows, last safe dispatch and the cost of air after it."""
     return closure.run(mode)
 
 
 @app.get("/api/plan")
-def plan(mode: str = "demo"):
+def plan(mode: Mode = "demo"):
     """Mixed-fleet plan for the next 7 days, with the current Approve / Modify / Reject status of each line."""
     return planner.with_decisions(planner.run(mode))
 
 
+# DEMO ONLY: role and user come from the on-screen role picker, because the brief asks for demo roles
+# with no real login. Anyone who can reach this API can claim any role. In deployment, take role and user
+# from the authenticated identity (Army SSO / PKI) and map roles on the server; never trust the body.
 class Decision(BaseModel):
     key: str = Field(max_length=200)
     action: str = Field(pattern="^(approve|modify|reject)$")
@@ -78,7 +83,7 @@ class Decision(BaseModel):
 
 
 @app.post("/api/plan/decision")
-def decision(d: Decision, mode: str = "demo"):
+def decision(d: Decision, mode: Mode = "demo"):
     try:
         return planner.decide(mode, d.key, d.action, d.role, d.user, d.kg, d.note)
     except PermissionError as e:
@@ -90,12 +95,12 @@ def decision(d: Decision, mode: str = "demo"):
 
 
 @app.get("/api/audit")
-def audit(limit: int = 200):
+def audit(limit: int = Query(200, ge=1, le=1000)):
     return db.query("SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (min(limit, 1000),))
 
 
 @app.get("/api/forecast")
-def forecast_summary(mode: str = "demo"):
+def forecast_summary(mode: Mode = "demo"):
     r = forecast.run(mode)
     return {"accuracy": records(r["accuracy"]), "cover": records(r["cover"]),
             "note": "Accuracy is measured on simulated consumption data; real accuracy is known only on real CICG data. "
@@ -103,7 +108,7 @@ def forecast_summary(mode: str = "demo"):
 
 
 @app.get("/api/forecast/{post}")
-def forecast_post(post: str, mode: str = "demo", days: int = 60):
+def forecast_post(post: str = Path(max_length=10), mode: Mode = "demo", days: int = Query(60, ge=1, le=365)):
     """Last `days` of actual use and the next `days` of forecast (P10/P50/P90) for each class."""
     now = world.clock(mode).normalize()
     hist = world.consumption(mode)
