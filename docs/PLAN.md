@@ -80,8 +80,12 @@ Simulated date **25 Oct 2026**, "Sector X (fictional)". Rear nodes: Leh (main de
    - "Medicines to Post Delta by drone: **274 kg in 19 sorties on 26 Oct** from Roadhead Lima (8.5 km, 15 kg per sortie). The track is closed by snow; a helicopter + porters would be ~Rs 1,344/kg vs ~Rs 106/kg (**~13×**)."
    - Alpha kerosene goes by jeep and mule before 29 Oct.
    - Foxtrot rations go by mule and porter today, then 30 helicopter sorties.
-4. **Drone advisor:** "20 high-altitude drones at Base K-1 save ~N helicopter hours/winter."
-5. **What-if** "pass closes 10 days early" → Alpha and Foxtrot turn red, helicopter hours jump.
+4. **Drone advisor (headline):** "20 drones (12,000–20,000 ft band) at **Node Mike**: helicopter sorties to Post Foxtrot drop from **30 to 0** this week, and **₹167 lakh** is saved (33.8 helicopter hours). Today Foxtrot is out of drone reach: the only drones are at Roadhead Lima, 19 km away (range 10 km)."
+5. **What-ifs** (before → after this week):
+   - Pass closes 10 days early: posts at risk 3 → 4 (Echo), helicopter sorties 30 → 49, 27.5 t cannot move.
+   - Blizzard grounds helicopters 3 days: 3.9 t cannot move.
+   - Troops +20% at Alpha–Charlie: posts at risk 3 → 5 (Bravo, Charlie).
+   - 20 drones arrive: helicopter sorties 30 → 0, cost ₹1.84 crore → ₹0.17 crore.
 6. **Sources** page → add a config file → a new stream appears.
 7. **Commander approves** → audit log entry.
 

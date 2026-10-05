@@ -66,12 +66,27 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - **Commander in the loop:** tables `decisions` and `audit_log`. `POST /api/plan/decision` takes `{key, action: approve|modify|reject, role, user, kg?, note?}`. Approve/reject is for the Commander only; modify is for the Commander or the Logistics Officer; the Post QM gets 403. Every action goes to `GET /api/audit`. Approving a modified line keeps the modified kg. `reset_demo.bat` clears decisions.
   - API: `GET /api/plan?mode=` (cached solve + fresh decisions). The self-check covers all of the above, then removes its own test decisions.
 
+- **Fixes before Step 6 (5 Oct 2026):**
+  - **One set of cost inputs:** `backend/costs.py` + `params.json` → `costs` (source The Week 2020, all PLACEHOLDER). The PNR, planner, drone advisor and what-ifs all price through it; `/api/costs` serves it. The rate is per kg-km, so Srinagar–Leh = ₹10/kg and Alpha's 100 km forward route = ₹3.8/kg. FACTS §5 explains this.
+  - **Drone realism:**
+    - Each sortie's flight time is checked against the 40-min endurance.
+    - One sortie ties a drone up for max(flight + 5 min swap, (flight + 90 min recharge) / 2 batteries) = ~55 min for Delta. Each base's drones fly at most 8 h/day; the planner splits loads across days when needed.
+    - Plan lines show a daily schedule: "26 Oct: 19 sorties = 4 drones x up to 5 sorties, 19 battery charges".
+    - PLACEHOLDERs: `swap_min`, `batteries_per_drone`, `charge_min`, `op_hours_per_day`.
+  - Bug found and fixed: a name clash (`shift`) in `closure.segment` had moved closure days by the temperature correction.
+- **Step 6 (5 Oct 2026): drone advisor + what-ifs.**
+  - `backend/drones.py` `advise(mode, n, band)`:
+    - Re-plans with N extra drones at each roadhead/node (bases supplied by road) and ranks the bases by ₹ saved, helicopter sorties/hours and foot trips.
+    - Headline: Foxtrot helicopter sorties 30 → 0 with 20 drones at Node Mike, ₹167 lakh saved.
+    - Lower-band drones cannot clear the terrain and save nothing.
+  - `backend/scenarios.py`: 4 what-ifs (pass −10 days via `closure.run(shift=-10)`, blizzard via `planner.plan(grounded_days=3)`, troops +20% via `closure.run(strength=...)`, 20 drones at the best base). Each returns before/after KPIs and plain change lines, with a note when the cost falls only because loads did not move.
+  - API: `/api/drones?mode=&n=&band=`, `/api/scenarios?mode=`, `/api/costs`. A background warm-up at server start pre-computes the demo; cold calls take ~25–30 s.
+
 ## Known limits (say these honestly)
 - **Roles are demo-only.** The brief asks for demo roles with no real login, so `role` and `user` come from the request (the role picker). Anyone who can reach the API can claim "Commander". Mitigations: the server listens only on 127.0.0.1, and FastAPI parses only JSON bodies, which blocks simple cross-site form posts. Production would take the identity from Army SSO/PKI and map roles on the server. An automated security review flagged this on 5 Oct; it was acknowledged and documented, not fixed (by design for the demo).
 
 ## Next
-- Step 6: drone advisor (`backend/drones.py`): for N drones of a band, rank candidate bases (roadheads, Node Mike, helipad posts) by the helicopter hours, porter/mule trips and stock-out risk they would save over the winter, using real flyable days. Re-use `planner._leg_top`, `planner._band_payload`, `closure._air`.
-- Step 6: what-ifs (`backend/scenarios.py`): pass closes 10 days early (shift closure days in `closure.segment`), blizzard grounds helicopters 3 days (`planner.plan(grounded_days=3)`), troops +20% at Alpha–Charlie (`forecast.forecast(strength_factor=...)`), 20 high-altitude drones arrive (`planner.plan(drones_at=...)`). Show before vs after.
+- **Step 7: the UI** (most important for the jury). Use the design skills, laptop 1366×768, a calm ops-tool look. Screens: Dashboard map (OSM roads, real passes, fictional posts, drone legs) + "3 posts at risk"; Post detail (forecast band, method + why); Point of No Return (closure curve, last safe dispatch, cost with inputs); Plan (lines, reasons, assumptions, daily drone schedule, Approve/Modify/Reject with a role picker); Drone advisor; What-ifs; Sources (labels Real/Simulated, health, config file); Audit log. Demo/Live mode toggle.
 
 ## How to run
 - Double-click `start.bat` (the first run sets things up) and open http://localhost:8000. `reset_demo.bat` rebuilds the demo data.

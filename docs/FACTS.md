@@ -137,7 +137,13 @@ Plan: download once **1990-01-01 → latest** for Leh, Kargil, Drass, Zoji La, B
 | **No official, current military helicopter cost per flying hour was found.** | — | — |
 
 **What we will use:** helicopter cost = `PLACEHOLDER` anchored on ~₹4 lakh per 45-min sortie. Payload falls with altitude (`PLACEHOLDER` curve through the public anchors: ~200 kg near 21,000 ft, more at lower altitudes).
-Rough check: road ≈ ₹10/kg (₹1 lakh ÷ 10,000 kg); helicopter ≈ ₹4 lakh ÷ 200–1,000 kg ≈ ₹400–2,000/kg → **~40×–200× road**. So the brief's "~40×" is reasonable as a *lower* figure. It will be labelled "derived from public figures".
+**One set of cost inputs (used everywhere in the app, `params.json` → `costs`, all tagged PLACEHOLDER):**
+- truck **₹0.024 per kg per km**. This is the ₹1 lakh ÷ 10,000 kg ÷ ~420 km Srinagar–Leh figure, so Srinagar–Leh ≈ ₹10/kg; the 80 km Leh–Kilo road is ≈ ₹1.9/kg.
+- jeep tracks 4× the truck rate.
+- helicopter **₹5.33 lakh per flying hour** (₹4 lakh per 45-min sortie).
+- mule ₹150 and porter ₹100 per trip-km; drone ₹1,500 per sortie (made up).
+
+So "road ₹/kg" depends on the distance: Alpha (80 km road + 20 km jeep track) ≈ ₹3.8/kg, while the whole Srinagar–Leh haul is ₹10/kg. Helicopter ≈ ₹600–1,500/kg depending on distance and the payload at the helipad's height. Every multiple shown in the app comes with these inputs next to it.
 
 ---
 
