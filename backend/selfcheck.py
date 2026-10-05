@@ -46,9 +46,9 @@ def check_real_data():
 def check_forecast():
     r = forecast.run("demo")
     acc = r["accuracy"].set_index("class")
-    assert acc.loc["kerosene", "model_error_pct"] < acc.loc["kerosene", "naive_error_pct"], acc
-    assert (acc["model_error_pct"] <= acc["naive_error_pct"] + 2).all(), "never clearly worse than naive"
-    assert acc["band_coverage_pct"].between(60, 95).all(), acc["band_coverage_pct"]
+    assert acc.loc["kerosene", "method"] == "LightGBM model", acc
+    assert (acc["error_pct"] <= acc["naive_error_pct"] + 1e-9).all(), "never worse than the 28-day average"
+    assert acc["coverage_pct"].between(70, 90).all(), acc["coverage_pct"]
     c = r["cover"].set_index(["post", "class"])
     assert c.loc[("PA", "kerosene"), "status"] == "red" and c.loc[("PD", "medical"), "status"] == "red"
     assert sorted(set(c[c["status"] != "green"].index.get_level_values(0))) == ["PA", "PD", "PF"], "3 posts at risk"
