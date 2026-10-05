@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RASAD - Direction B: Toposheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..800;1,62..125,500&family=Noto+Sans+Devanagari:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-contour@4"></script>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="common.js"></script>
+<style>
+:root {
+  --paper: #fbfbf8; --margin: #f1f2ee; --ink: #1d2329; --ink-2: #44505a; --frame: #1d2329;
+  --contour: #a8673a; --red: #c8101a; --blue: #1c5d99; --green: #2b7a3a; --amber: #9a5b00; --rule: #c9cdc8;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { font: 450 15px/1.4 Archivo, system-ui, sans-serif; font-stretch: 100%; color: var(--ink); background: var(--margin);
+  font-variant-numeric: tabular-nums; display: grid; grid-template-rows: 64px 1fr 38px; }
+::selection { background: #ffd6d8; }
+header { display: flex; align-items: center; gap: 18px; padding: 0 20px; border-bottom: 2px solid var(--frame); background: var(--paper); }
+.title { display: flex; align-items: baseline; gap: 14px; }
+.title h1 { margin: 0; font: 800 26px/1 Archivo; font-stretch: 75%; letter-spacing: .01em; }
+.title .brand { font: 700 15px Archivo; font-stretch: 112%; color: var(--ink-2); }
+.title .brand span { font: 600 15px "Noto Sans Devanagari"; margin-left: 4px; }
+.meta { margin-left: auto; display: flex; align-items: center; gap: 12px; font: 600 15px Archivo; }
+.seg { display: inline-flex; border: 1.5px solid var(--ink); border-radius: 999px; overflow: hidden; }
+.seg button { font: 600 14px Archivo; padding: 4px 14px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.seg button[aria-pressed=true] { background: var(--ink); color: #fff; }
+.btn { font: 700 15px Archivo; display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px; border: 1.5px solid var(--red); background: var(--red); color: #fff; cursor: pointer; }
+.role { font: 600 14px Archivo; border: 1.5px solid var(--ink); border-radius: 999px; padding: 5px 10px; background: var(--paper); }
+
+main { display: grid; grid-template-columns: 178px 1fr 392px; min-height: 0; }
+nav { padding: 14px 10px 14px 16px; border-right: 1px solid var(--rule); display: flex; flex-direction: column; gap: 2px; }
+nav h2, .notes h2 { margin: 0 0 8px; font: 700 14px Archivo; font-stretch: 112%; color: var(--ink-2); }
+nav a { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 6px; color: var(--ink); text-decoration: none; font: 600 15px Archivo; }
+nav a svg { width: 18px; height: 18px; stroke-width: 2; color: var(--ink-2); }
+nav a[aria-current=page] { background: var(--ink); color: #fff; }
+nav a[aria-current=page] svg { color: #fff; }
+
+.sheet { position: relative; margin: 14px 0 14px 14px; border: 2px solid var(--frame); background: var(--paper); }
+.sheet::before { content: ""; position: absolute; inset: 6px; border: 1px solid var(--frame); pointer-events: none; z-index: 450; }
+#map { position: absolute; inset: 7px; background: var(--paper); }
+.leaflet-container { font: inherit; background: var(--paper); }
+.lbl { font: 700 15px Archivo; font-stretch: 88%; color: var(--ink); white-space: nowrap; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+.lbl small { font: 500 12.5px Archivo; color: var(--ink-2); }
+.pass { font: italic 500 14px Archivo; color: #6b3d16; white-space: nowrap; text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
+.over { width: 46px; height: 46px; border: 3px solid var(--red); border-radius: 50%; position: relative; }
+.over b { position: absolute; right: -14px; top: -14px; width: 26px; height: 26px; border-radius: 50%; background: var(--red); color: #fff;
+  font: 800 15px/26px Archivo; text-align: center; }
+.tick { position: absolute; z-index: 460; font: 600 11.5px Archivo; color: var(--ink-2); background: var(--paper); padding: 0 3px; }
+.legend { position: absolute; right: 18px; bottom: 18px; z-index: 500; background: var(--paper); border: 1px solid var(--frame); padding: 8px 12px;
+  display: grid; grid-template-columns: auto auto; gap: 3px 14px; font: 500 13px Archivo; }
+.legend i { display: inline-block; width: 22px; height: 0; vertical-align: middle; margin-right: 6px; border-top: 3px solid; }
+
+.notes { padding: 14px 18px 14px 16px; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
+.notes h2 { font-size: 15px; color: var(--red); }
+.note { display: grid; grid-template-columns: 34px 1fr; gap: 0 10px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
+.num { width: 30px; height: 30px; border-radius: 50%; background: var(--red); color: #fff; font: 800 16px/30px Archivo; text-align: center; }
+.note h3 { margin: 2px 0 2px; font: 800 19px Archivo; font-stretch: 88%; }
+.note h3 small { font: 500 14px Archivo; color: var(--ink-2); }
+.act { font: 800 30px/1.05 Archivo; font-stretch: 75%; color: var(--red); margin: 4px 0; }
+.act small { font: 600 15px Archivo; font-stretch: 100%; color: var(--ink); }
+.facts { display: flex; gap: 16px; font: 600 14px Archivo; margin: 2px 0 4px; }
+.facts span { color: var(--ink-2); font-weight: 500; }
+.why { margin: 0; font: 450 14px/1.35 Archivo; }
+.tags { display: flex; gap: 6px; margin-top: 6px; }
+.chip { font: 600 11.5px/1 Archivo; padding: 4px 7px; border-radius: 999px; cursor: help; border: 1px solid var(--ink-2); color: var(--ink-2); background: var(--paper); }
+.chip.real { border-color: var(--blue); color: var(--blue); }
+.chip.ph { border-color: var(--amber); color: var(--amber); background: #fff6e0; }
+.stockline { font: 500 14px/1.4 Archivo; }
+.stockline b { color: var(--green); }
+
+footer { display: flex; align-items: center; gap: 24px; padding: 0 20px; border-top: 2px solid var(--frame); background: var(--paper); font: 500 13.5px Archivo; }
+footer b { font-weight: 700; }
+.scale { display: flex; align-items: center; gap: 8px; }
+.scale i { display: inline-block; width: 120px; height: 8px; border: 1.5px solid var(--ink); background: linear-gradient(90deg, var(--ink) 0 25%, #fff 25% 50%, var(--ink) 50% 75%, #fff 75%); }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="title"><h1>Sector X (fictional)</h1><div class="brand">RASAD<span>रसद</span></div></div>
+  <div class="meta"><span>25 Oct 2026, 06:00</span>
+    <div class="seg" role="group" aria-label="Mode"><button aria-pressed="true">Demo</button><button aria-pressed="false">Live</button></div>
+    <button class="btn"><i data-lucide="presentation"></i>Guided demo</button>
+    <select class="role" aria-label="Role"><option>Commander</option><option>Logistics Officer</option><option>Post QM</option></select>
+  </div>
+</header>
+<main>
+  <nav aria-label="Screens"><h2>Sheet index</h2>
+    <a href="#" aria-current="page"><i data-lucide="map"></i>Dashboard</a>
+    <a href="#"><i data-lucide="mountain-snow"></i>Posts</a>
+    <a href="#"><i data-lucide="calendar-clock"></i>Point of no return</a>
+    <a href="#"><i data-lucide="route"></i>Plan</a>
+    <a href="#"><i data-lucide="plane"></i>Drones</a>
+    <a href="#"><i data-lucide="git-compare-arrows"></i>What-if</a>
+    <a href="#"><i data-lucide="database"></i>Sources</a>
+    <a href="#"><i data-lucide="scroll-text"></i>Audit log</a>
+  </nav>
+  <div class="sheet"><div id="map"></div>
+    <div class="legend">
+      <span><i style="border-color:#c8101a"></i>National highway</span><span><i style="border-color:#1d2329"></i>Forward road</span>
+      <span><i style="border-color:#1d2329;border-top-style:dashed"></i>Jeep track</span><span><i style="border-color:#6b3d16;border-top-style:dotted"></i>Mule track</span>
+      <span><i style="border-color:#1c5d99;border-top-style:dashed"></i>Drone leg</span><span><i style="border-color:#a8673a;border-top-width:1px"></i>Contour 200 m</span>
+    </div>
+  </div>
+  <aside class="notes" aria-label="Notes"><h2 id="nh"></h2><div id="notes"></div></aside>
+</main>
+<footer id="foot"></footer>
+<script>
+(async () => {
+  const d = await loadAll();
+  const S = postSummaries(d);
+  const risk = Object.values(S).filter((s) => ['passed', 'urgent'].includes(s.item.status)).sort((a, b) => RANK[a.item.status] - RANK[b.item.status] || a.item.days_left - b.item.days_left);
+  const rest = Object.values(S).filter((s) => !risk.includes(s));
+  document.getElementById('nh').textContent = `${risk.length} posts at risk, marked on the sheet`;
+  document.getElementById('notes').innerHTML = risk.map((s, k) => {
+    const i = s.item, passed = i.status === 'passed', drone = s.lines.find((l) => l.mode === 'drone');
+    const act = passed ? `Air only <small>${drone ? `drone ${drone.when}` : 'helicopter'}</small>`
+      : i.days_left === 0 ? `Send today <small>last road day</small>` : `Send by ${day(i.last_safe_dispatch)} <small>80% confidence</small>`;
+    const why = passed ? `Track closed by snow. ${drone ? `${drone.trips} drone sorties from ${drone.from}, 15 kg each.` : ''} Helicopter ~${i.cost_multiple}× road cost.`
+      : `Road open until ${day(i.closure_p20)} (80%). Road ₹${fmt(i.road_inr_per_kg, 1)}/kg vs helicopter ₹${fmt(i.air_inr_per_kg)}/kg.`;
+    return `<div class="note"><div class="num">${k + 1}</div><div>
+      <h3>${i.post_name.replace('Post ', '')}, ${i.label.toLowerCase()} <small>${fmt(s.node.alt_m)} m</small></h3>
+      <div class="act">${act}</div>
+      <div class="facts">${s.cover ? `<div>${s.cover.days} days left <span>(${s.cover.days_low}–${s.cover.days_high})</span></div>` : ''}<div>Short ${fmt(i.shortfall)} ${i.unit}</div></div>
+      <p class="why">${why}</p>
+      <div class="tags"><span class="chip" title="Simulated: military data is classified; in deployment this comes from CICG via adapters">Simulated</span><span class="chip ph" title="${i.cost_basis}">PLACEHOLDER cost</span></div>
+    </div></div>`;
+  }).join('') + `<p class="stockline"><b>Stocked to reopening:</b> ${rest.map((s) => s.node.name.replace('Post ', '')).join(', ')}.</p>`;
+
+  const ax = d.pnr.axes, warn = d.sources.filter((s) => s.health !== 'ok').length;
+  document.getElementById('foot').innerHTML = `<span class="scale"><i></i>0–10 km</span>
+    <span><b>Manali–Leh</b> closes ${day(ax[1].closure_p20)} to ${day(ax[1].closure_p80)}</span><span><b>Zoji La</b> ${day(ax[0].closure_p20)} to ${day(ax[0].closure_p80)}</span>
+    <span style="margin-left:auto">Terrain Copernicus DEM, roads © OpenStreetMap <span class="chip real" title="Real, cached on this machine">Real data</span></span>
+    <span>${d.sources.length} sources, ${warn} warning</span>`;
+
+  const { map, g } = baseMap('map', d);
+  reliefOverlay(g, () => [251, 251, 248], 0.38).addTo(map);
+  contourLayer(g, 200, (f) => ({ color: '#a8673a', weight: f.properties.value % 1000 ? 0.6 : 1.4, opacity: f.properties.value % 1000 ? .55 : .85 })).addTo(map);
+  d.sector.osm.filter((f) => f.kind === 'road').forEach((f) => L.polyline(f.geometry, { color: '#c8101a', weight: 3.5 }).addTo(map));
+  const status = Object.fromEntries(d.sector.roads.map((r) => [r.segment, r.status]));
+  forwardLinks(d).forEach((l) => {
+    const st = { road: { color: '#1d2329', weight: 3 }, jeep_track: { color: '#1d2329', weight: 2.5, dashArray: '8 5' }, mule_track: { color: '#6b3d16', weight: 3, dashArray: '2 5' } }[l.mode];
+    L.polyline(routeCoords(d, l), { ...st, ...(status[l.id] === 'closed' ? { color: '#c8101a', dashArray: '2 6' } : {}), lineCap: 'round' }).addTo(map);
+  });
+  d.plan.lines.filter((l) => l.mode === 'drone').forEach((l) => {
+    const b = d.sector.nodes.find((n) => n.name === l.from), p = d.sector.nodes.find((n) => n.id === l.post);
+    L.polyline([[b.lat, b.lon], [p.lat, p.lon]], { color: '#1c5d99', weight: 3, dashArray: '10 6' }).addTo(map);
+  });
+  d.sector.passes.forEach((p) => L.marker([p.lat, p.lon], { icon: L.divIcon({ className: '', html: `<div class="pass">${p.name} ${fmt(p.alt_m)}</div>`, iconAnchor: [0, 8] }) }).addTo(map));
+  risk.forEach((s, k) => L.marker([s.node.lat, s.node.lon], { icon: L.divIcon({ className: '', iconSize: [46, 46], iconAnchor: [23, 23], html: `<div class="over"><b>${k + 1}</b></div>` }) }).addTo(map));
+  d.sector.nodes.forEach((n) => {
+    if (!['post', 'roadhead', 'node', 'depot'].includes(n.kind)) return;
+    const post = n.kind === 'post';
+    L.circleMarker([n.lat, n.lon], { radius: post ? 6 : 5, color: '#1d2329', weight: 2, fillColor: post ? '#1d2329' : '#fff', fillOpacity: 1 }).addTo(map);
+    L.marker([n.lat, n.lon], { icon: L.divIcon({ className: '', iconAnchor: [-12, 9], html: `<div class="lbl">${n.name.replace('Post ', '')} ${post ? `<small>${fmt(n.alt_m)} m</small>` : ''}</div>` }) }).addTo(map);
+  });
+  lucide.createIcons();
+})();
+</script>
+</body>
+</html>

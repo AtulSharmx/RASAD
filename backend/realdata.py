@@ -18,7 +18,7 @@ from backend import db, weather
 
 REAL = db.ROOT / "data" / "real"
 FORECAST, DEM, OSM = REAL / "forecast.csv", REAL / "dem.csv", REAL / "osm_features.json"
-GRID = {"lat": (33.80, 34.30), "lon": (76.35, 77.25), "step": 0.015}  # around the fictional sector
+GRID = {"lat": (33.80, 34.45), "lon": (76.35, 77.65), "step": 0.015}  # the sector, NH-1 and Leh
 BBOX = "32.2,74.7,34.8,78.1"  # Srinagar - Leh - Manali
 
 
