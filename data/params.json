@@ -26,14 +26,11 @@
       "payload_kg": {"v": 2500, "src": "PLACEHOLDER: light truck on forward roads"},
       "jeep_payload_kg": {"v": 800, "src": "PLACEHOLDER: light vehicle on jeep tracks"},
       "jeep_speed_kmh": {"v": 10, "src": "PLACEHOLDER: jeep track average"},
-      "jeep_cost_factor": {"v": 4, "src": "PLACEHOLDER: cost per kg-km on jeep tracks compared with trucks"},
       "drive_hours_per_day": {"v": 8, "src": "PLACEHOLDER: daylight driving hours in mountains"},
-      "speed_kmh": {"v": 25, "src": "PLACEHOLDER: mountain road average"},
-      "cost_inr_per_kg_km": {"v": 0.024, "src": "DERIVED: Rs 1 lakh per 10-tonne round trip Srinagar-Leh (~420 km one way), The Week 2020 (FACTS 5)"}
+      "speed_kmh": {"v": 25, "src": "PLACEHOLDER: mountain road average"}
     },
     "helicopter": {
       "payload_kg_by_alt_m": {"v": [[3500, 1000], [4500, 600], [5500, 300], [6400, 200]], "src": "PLACEHOLDER curve; the 200 kg at ~21,000 ft point is the public Dhruv requirement (FACTS 5)"},
-      "cost_inr_per_hour": {"v": 533000, "src": "DERIVED: ~Rs 4 lakh per 45-min sortie, The Week 2020 (FACTS 5)"},
       "speed_kmh": {"v": 180, "src": "PLACEHOLDER"},
       "handling_hours": {"v": 0.25, "src": "PLACEHOLDER: loading and unloading time per sortie"},
       "max_wind_kmh": {"v": 55, "src": "PLACEHOLDER"},
@@ -45,27 +42,34 @@
       "range_km_one_way": {"v": 10, "src": "FACTS 3: lowest public figure (RFIs say 10-20 km)"},
       "speed_kmh": {"v": 50, "src": "FACTS 3: Sabal 20"},
       "endurance_min": {"v": 40, "src": "FACTS 3: Sabal 20"},
-      "cost_inr_per_sortie": {"v": 1500, "src": "PLACEHOLDER: battery, wear and crew time"},
       "max_wind_kmh": {"v": 35, "src": "PLACEHOLDER: no public wind limit found"},
       "max_snowfall_cm": {"v": 1, "src": "PLACEHOLDER"},
-      "handling_min": {"v": 10, "src": "PLACEHOLDER: load, battery swap, unload per sortie"},
+      "swap_min": {"v": 5, "src": "PLACEHOLDER: land, unload, swap battery, load"},
+      "batteries_per_drone": {"v": 2, "src": "PLACEHOLDER"},
+      "charge_min": {"v": 90, "src": "PLACEHOLDER: time to recharge one battery in the cold"},
       "op_hours_per_day": {"v": 8, "src": "PLACEHOLDER: daylight flying hours"},
-      "max_sorties_per_day": {"v": 12, "src": "PLACEHOLDER: battery cycles per drone per day"},
       "clearance_m": {"v": 400, "src": "FACTS 3: 2026 RFI flies 1,200-1,500 ft above ground (~400 m)"},
       "ceiling_m": {"v": 6096, "src": "FACTS 3: top of the 12,000-20,000 ft band"}
     },
     "mule": {
       "payload_kg": {"v": 40, "src": "FACTS 4: lower public figure (40-72.5 kg reported)"},
       "speed_kmh": {"v": 2.5, "src": "PLACEHOLDER"},
-      "cost_inr_per_trip_km": {"v": 150, "src": "PLACEHOLDER"},
       "max_snow_depth_m": {"v": 0.6, "src": "PLACEHOLDER: track usable below this snow depth"}
     },
     "porter": {
       "payload_kg": {"v": 20, "src": "FACTS 4: middle of the 10-30 kg range"},
       "speed_kmh": {"v": 2.0, "src": "PLACEHOLDER"},
-      "cost_inr_per_trip_km": {"v": 100, "src": "PLACEHOLDER"},
       "max_snow_depth_m": {"v": 0.9, "src": "PLACEHOLDER"}
     }
+  },
+  "costs": {
+    "source": "The Week, 13 Aug 2020 (retired officer quoted): truck Rs 1 lakh per 10-tonne Srinagar-Leh round trip; helicopter ~Rs 4 lakh per 45-minute sortie. Every other cost is made up.",
+    "truck_inr_per_kg_km": {"v": 0.024, "src": "PLACEHOLDER (derived from The Week 2020: Rs 1 lakh / 10,000 kg / ~420 km = Rs 10/kg Srinagar-Leh)"},
+    "jeep_factor": {"v": 4, "src": "PLACEHOLDER: a kg-km on a jeep track costs this many times a truck kg-km"},
+    "heli_inr_per_hour": {"v": 533000, "src": "PLACEHOLDER (derived from The Week 2020: Rs 4 lakh per 45-min sortie)"},
+    "mule_inr_per_trip_km": {"v": 150, "src": "PLACEHOLDER"},
+    "porter_inr_per_trip_km": {"v": 100, "src": "PLACEHOLDER"},
+    "drone_inr_per_sortie": {"v": 1500, "src": "PLACEHOLDER: battery wear, maintenance and crew time"}
   },
   "fleet": {
     "helicopters": {"v": 2, "src": "PLACEHOLDER: utility helicopters available to Sector X"},

@@ -1,7 +1,7 @@
 """Quick check of the core logic. Run after gen_data: python -m backend.selfcheck"""
 import pandas as pd
 
-from backend import adapters, closure, db, forecast, planner, world
+from backend import adapters, closure, costs, db, drones, forecast, planner, scenarios, world
 
 
 def check_adapters():
@@ -102,6 +102,25 @@ def check_plan():
         con.execute("DELETE FROM audit_log WHERE user = 'selfcheck'")
 
 
+def check_step6():
+    # one set of cost inputs: the PNR road cost for Alpha is exactly the shared rate x its route
+    pa = next(i for i in closure.run("demo")["items"] if i["post"] == "PA" and i["class"] == "kerosene")
+    assert abs(pa["road_inr_per_kg"] - round(costs.road(80, 20), 1)) < 0.11, pa["road_inr_per_kg"]
+    # drones respect flight time, batteries and the drones available
+    d = next(l for l in planner.run("demo")["lines"] if l["post"] == "PD" and l["mode"] == "drone")
+    for day in d["schedule"]:
+        assert day["trips"] <= 4 * (8 * 60 // 55), day  # 4 drones, one sortie per ~55-min cycle
+    a = drones.advise("demo")
+    assert a["ranking"][0]["base_name"] == "Node Mike" and "Post Foxtrot" in a["ranking"][0]["posts_served"]
+    assert a["foxtrot"]["heli_sorties_after"] < a["foxtrot"]["heli_sorties_before"] and a["foxtrot"]["saved_inr"] > 0
+    runs = {r["id"]: r for r in scenarios.all_runs("demo")}
+    assert runs["pass_early"]["after"]["posts_at_risk"] >= runs["pass_early"]["before"]["posts_at_risk"]
+    assert runs["pass_early"]["after"]["heli_sorties"] > runs["pass_early"]["before"]["heli_sorties"]
+    assert runs["blizzard"]["after"]["heli_sorties"] <= runs["blizzard"]["before"]["heli_sorties"]
+    assert runs["troops"]["after"]["posts_at_risk"] > runs["troops"]["before"]["posts_at_risk"]
+    assert runs["drones"]["after"]["cost_inr"] < runs["drones"]["before"]["cost_inr"]
+
+
 if __name__ == "__main__":
     check_adapters()
     check_forecast()
@@ -109,4 +128,5 @@ if __name__ == "__main__":
     check_demo_story()
     check_pnr()
     check_plan()
+    check_step6()
     print("selfcheck OK")

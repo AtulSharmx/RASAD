@@ -17,7 +17,6 @@ Numbers we could **not** find in a public source. They are made up for the proto
 | `modes.truck.payload_kg` | 2500 | light truck on forward roads |
 | `modes.truck.jeep_payload_kg` | 800 | light vehicle on jeep tracks |
 | `modes.truck.jeep_speed_kmh` | 10 | jeep track average |
-| `modes.truck.jeep_cost_factor` | 4 | cost per kg-km on jeep tracks compared with trucks |
 | `modes.truck.drive_hours_per_day` | 8 | daylight driving hours in mountains |
 | `modes.truck.speed_kmh` | 25 | mountain road average |
 | `modes.helicopter.payload_kg_by_alt_m` | [[3500, 1000], [4500, 600], [5500, 300], [6400, 200]] | curve; the 200 kg at ~21,000 ft point is the public Dhruv requirement (FACTS 5) |
@@ -26,18 +25,22 @@ Numbers we could **not** find in a public source. They are made up for the proto
 | `modes.helicopter.max_wind_kmh` | 55 | - |
 | `modes.helicopter.max_snowfall_cm` | 2 | - |
 | `modes.helicopter.max_cloud_pct` | 85 | proxy for visibility (Open-Meteo archive has no visibility) |
-| `modes.drone.cost_inr_per_sortie` | 1500 | battery, wear and crew time |
 | `modes.drone.max_wind_kmh` | 35 | no public wind limit found |
 | `modes.drone.max_snowfall_cm` | 1 | - |
-| `modes.drone.handling_min` | 10 | load, battery swap, unload per sortie |
+| `modes.drone.swap_min` | 5 | land, unload, swap battery, load |
+| `modes.drone.batteries_per_drone` | 2 | - |
+| `modes.drone.charge_min` | 90 | time to recharge one battery in the cold |
 | `modes.drone.op_hours_per_day` | 8 | daylight flying hours |
-| `modes.drone.max_sorties_per_day` | 12 | battery cycles per drone per day |
 | `modes.mule.speed_kmh` | 2.5 | - |
-| `modes.mule.cost_inr_per_trip_km` | 150 | - |
 | `modes.mule.max_snow_depth_m` | 0.6 | track usable below this snow depth |
 | `modes.porter.speed_kmh` | 2.0 | - |
-| `modes.porter.cost_inr_per_trip_km` | 100 | - |
 | `modes.porter.max_snow_depth_m` | 0.9 | - |
+| `costs.truck_inr_per_kg_km` | 0.024 | (derived from The Week 2020: Rs 1 lakh / 10,000 kg / ~420 km = Rs 10/kg Srinagar-Leh) |
+| `costs.jeep_factor` | 4 | a kg-km on a jeep track costs this many times a truck kg-km |
+| `costs.heli_inr_per_hour` | 533000 | (derived from The Week 2020: Rs 4 lakh per 45-min sortie) |
+| `costs.mule_inr_per_trip_km` | 150 | - |
+| `costs.porter_inr_per_trip_km` | 100 | - |
+| `costs.drone_inr_per_sortie` | 1500 | battery wear, maintenance and crew time |
 | `fleet.helicopters` | 2 | utility helicopters available to Sector X |
 | `fleet.heli_hours_per_day` | 6 | total flying hours per day for the sector |
 | `fleet.drones_at` | {"RH-L": 4} | drones already held |

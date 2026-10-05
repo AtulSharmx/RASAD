@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 from ortools.sat.python import cp_model
 
-from backend import closure, db, forecast, world
+from backend import closure, costs, db, forecast, world
 
 P = db.PARAMS
 M, F, PL = P["modes"], P["fleet"], P["planner"]
@@ -26,12 +26,6 @@ DAY = pd.Timedelta(days=1)
 
 def _tag(x: dict) -> str:
     return "PLACEHOLDER" if x["src"].startswith(("PLACEHOLDER", "DERIVED")) else "public source"
-
-
-def _band_payload(alt_m: float) -> float:
-    ft = alt_m / 0.3048
-    b = M["drone"]["payload_kg_by_band"]["v"]
-    return b["up_to_6000ft"] if ft <= 6000 else b["6000_12000ft"] if ft <= 12000 else b["12000_20000ft"]
 
 
 def _leg_top(a: dict, b: dict, grid: pd.DataFrame) -> float:
@@ -57,8 +51,21 @@ def _flyable(mode: str, days: list, grounded: int) -> dict:
     return out
 
 
-def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = None, grounded_days: int = 0) -> dict:
-    """pnr / drones_at / grounded_days let the what-if scenarios (Step 6) change the inputs."""
+CEILING_M = {"up_to_6000ft": 1829, "6000_12000ft": 3658, "12000_20000ft": 6096}  # top of each RFI band
+
+
+def _supply(node_id: str, links: dict) -> tuple[float, float]:
+    """(road km, jeep-track km) from the depot to a node: what its loads ride before the last leg."""
+    km = {"road": 0.0, "jeep_track": 0.0, "mule_track": 0.0}
+    while node_id in links:
+        km[links[node_id]["mode"]] += links[node_id]["km"]
+        node_id = links[node_id]["from_node"]
+    return km["road"], km["jeep_track"]
+
+
+def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = None, grounded_days: int = 0,
+         drone_band: str = "12000_20000ft") -> dict:
+    """pnr / drones_at / grounded_days / drone_band let the advisor and what-ifs change the inputs."""
     pnr = pnr or closure.run(mode)
     drones_at = F["drones_at"]["v"] if drones_at is None else drones_at
     now = world.clock(mode).normalize()
@@ -84,7 +91,6 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
         open_route = all(r["status"] != "closed" for r in db.query(
             "SELECT status FROM road_status WHERE segment IN (?, ?)", (last["id"], to_rh["id"])))
         last_safe = pd.Timestamp(ld["last_safe_dispatch"])
-        truck_kg = to_rh["km"] * M["truck"]["cost_inr_per_kg_km"]["v"]  # Rs per kg to the roadhead
         cand = []
         if open_route:  # ground options, only up to the Point of No Return
             ground_days = [d for d in days if d <= last_safe]
@@ -95,7 +101,7 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
             for animal in ("mule", "porter"):
                 if last["mode"] != "road":
                     rt = math.ceil(2 * last["km"] / M[animal]["speed_kmh"]["v"] / M["truck"]["drive_hours_per_day"]["v"])
-                    trip = last["km"] * M[animal]["cost_inr_per_trip_km"]["v"] + truck_kg * M[animal]["payload_kg"]["v"]
+                    trip = costs.foot_trip(animal, last["km"], *_supply(rh["id"], links))
                     cand.append((animal, rh["id"], ground_days, M[animal]["payload_kg"]["v"], trip, 0, rt))
         # helicopter from Leh to the post's helipad (or the nearest one + porters)
         pads = [n for n in nodes.values() if n["helipad"] and n["kind"] != "depot"]
@@ -103,9 +109,9 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
         curve = np.array(M["helicopter"]["payload_kg_by_alt_m"]["v"])
         hp = float(np.interp(pad["alt_m"], curve[:, 0], curve[:, 1]))
         sortie_h = 2 * closure._dist_km(nodes["LEH"], pad) / M["helicopter"]["speed_kmh"]["v"] + M["helicopter"]["handling_hours"]["v"]
-        foot = 0 if pad is post else closure._dist_km(pad, post) * 1.4 * M["porter"]["cost_inr_per_trip_km"]["v"] / M["porter"]["payload_kg"]["v"]
+        foot = 0 if pad is post else costs.foot_per_kg("porter", closure._dist_km(pad, post) * 1.4)
         cand.append(("helicopter", pad["id"], [d for d in days if fly[d]["heli"]], round(hp),
-                     sortie_h * M["helicopter"]["cost_inr_per_hour"]["v"], foot, sortie_h))
+                     costs.heli_sortie(sortie_h), foot, sortie_h))
         # drones from every base that holds drones, if in range and able to clear the terrain
         drone_note = []
         for base_id, n_drones in drones_at.items():
@@ -115,15 +121,22 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
             if dist > M["drone"]["range_km_one_way"]["v"]:
                 drone_note.append(f"drones at {base['name']} are {dist:.0f} km away (range {M['drone']['range_km_one_way']['v']} km)")
                 continue
-            if top > M["drone"]["ceiling_m"]["v"]:
-                drone_note.append(f"the leg from {base['name']} must clear {top:,.0f} m, above the 20,000 ft band")
+            if top > CEILING_M[drone_band]:
+                drone_note.append(f"the leg from {base['name']} must clear {top:,.0f} m, above the "
+                                  f"{drone_band.replace('_', ' ')} drone band")
                 continue
-            sortie_min = 2 * dist / M["drone"]["speed_kmh"]["v"] * 60 + M["drone"]["handling_min"]["v"]
-            per_day = min(M["drone"]["max_sorties_per_day"]["v"], int(M["drone"]["op_hours_per_day"]["v"] * 60 // sortie_min))
-            pay = _band_payload(top)
-            trip = M["drone"]["cost_inr_per_sortie"]["v"] + (to_rh["km"] * M["truck"]["cost_inr_per_kg_km"]["v"]) * pay
+            dr = M["drone"]
+            flight = 2 * dist / dr["speed_kmh"]["v"] * 60  # minutes in the air, there and back
+            if flight > dr["endurance_min"]["v"]:
+                drone_note.append(f"a round trip from {base['name']} takes {flight:.0f} min, beyond the battery's "
+                                  f"{dr['endurance_min']['v']} min")
+                continue
+            # one sortie ties up a drone for flight + swap, and a battery for flight + recharge (shared by B batteries)
+            cycle = max(flight + dr["swap_min"]["v"], (flight + dr["charge_min"]["v"]) / dr["batteries_per_drone"]["v"])
+            pay = M["drone"]["payload_kg_by_band"]["v"][drone_band]
+            trip = costs.drone_sortie(pay, *_supply(base_id, links))
             cand.append(("drone", base_id, [d for d in days if fly[d]["drone"]], pay, trip, 0,
-                         (per_day, n_drones, dist, top, sortie_min)))
+                         (n_drones, dist, top, flight, cycle)))
         if not drones_at:
             drone_note.append("no drones held in the sector")
         ld["_drone_note"] = drone_note
@@ -180,12 +193,11 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
         if today:
             m.add(sum(today) <= round(100 * hours.get(d.date().isoformat(), 0)))
     for src, rows in use["drone"].items():
-        n_drones = rows[0][1][1]
+        n_drones = rows[0][1][0]
         for d in days:
             today = [(t, x[4]) for t, x, dd in rows if dd == d]
-            if today:  # flying minutes and battery cycles per day for the drones at this base
-                m.add(sum(t * round(mins) for t, mins in today) <= n_drones * M["drone"]["op_hours_per_day"]["v"] * 60)
-                m.add(sum(t for t, _ in today) <= n_drones * M["drone"]["max_sorties_per_day"]["v"])
+            if today:  # each base's drones have op_hours of flying per day; a sortie uses one 'cycle' of it
+                m.add(sum(t * round(c) for t, c in today) <= n_drones * M["drone"]["op_hours_per_day"]["v"] * 60)
 
     ten = lambda x: round(10 * x)  # CP-SAT needs whole numbers: work in tenths of a rupee
     cost = sum(ten(o["cost"][0]) * o["trips"] + ten(o["cost"][1] + o["delay"]) * o["kg"] for o in opts)
@@ -209,7 +221,8 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
             trips = sum(solver.value(o["trips"]) for o in os_)
             cost_inr = sum(o["cost"][0] * solver.value(o["trips"]) + o["cost"][1] * solver.value(o["kg"]) for o in os_)
             ds = sorted({o["day"] for o in os_})
-            lines.append(_line(mode, ld, kind, src, kg, trips, cost_inr, ds, os_[0], nodes))
+            sched = [(o["day"], solver.value(o["trips"]), solver.value(o["kg"])) for o in os_ if solver.value(o["kg"])]
+            lines.append(_line(mode, ld, kind, src, kg, trips, cost_inr, ds, os_[0], nodes, sched))
         short = solver.value(ld["_short"])
         if short > 0:
             lines.append(_line(mode, ld, "not moved", "", short, 0, 0, [], None, nodes))
@@ -222,7 +235,7 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
             "solver": solver.status_name(status)}
 
 
-def _line(mode, ld, kind, src, kg, trips, cost_inr, ds, o, nodes) -> dict:
+def _line(mode, ld, kind, src, kg, trips, cost_inr, ds, o, nodes, sched=()) -> dict:
     first, last_d = (ds[0], ds[-1]) if ds else (None, None)
     cls = P["classes"][ld["class"]]
     units = kg / cls["kg_per_unit"]
@@ -237,7 +250,7 @@ def _line(mode, ld, kind, src, kg, trips, cost_inr, ds, o, nodes) -> dict:
         reason = (f"Road open until {pd.Timestamp(ld['closure_p20']):%d %b} (80% confidence), so it leaves by "
                   f"{pd.Timestamp(ld['last_safe_dispatch']):%d %b}. By road ~Rs {per_kg:,.1f}/kg; a helicopter would be "
                   f"~Rs {heli_per_kg:,.0f}/kg (~{heli_per_kg / max(per_kg, 0.01):.0f}x).")
-        assumptions = [("truck cost", f"Rs {M['truck']['cost_inr_per_kg_km']['v']}/kg-km", "PLACEHOLDER (The Week 2020)"),
+        assumptions = [("truck cost", f"Rs {costs.TRUCK}/kg-km (jeep x{costs.C['jeep_factor']['v']})", "PLACEHOLDER (The Week 2020)"),
                        (f"{kind} payload", f"{o['pay']:,.0f} kg", "PLACEHOLDER")]
     elif kind in ("mule", "porter"):
         reason = (f"{trips} {kind} trip{'s' if trips != 1 else ''} from {nodes[src]['name']} before the track closes "
@@ -246,26 +259,32 @@ def _line(mode, ld, kind, src, kg, trips, cost_inr, ds, o, nodes) -> dict:
         fleet = F["mules_at" if kind == "mule" else "porters_at"]["v"].get(src, 0)
         assumptions = [(f"{kind} load", f"{o['pay']} kg", _tag(M[kind]["payload_kg"]) + " (" + M[kind]["payload_kg"]["src"] + ")"),
                        (f"{kind}s at {nodes[src]['name']}", str(fleet), "PLACEHOLDER"),
-                       (f"{kind} cost", f"Rs {M[kind]['cost_inr_per_trip_km']['v']}/trip-km", "PLACEHOLDER")]
+                       (f"{kind} cost", f"Rs {costs.C[kind + '_inr_per_trip_km']['v']}/trip-km", "PLACEHOLDER")]
     elif kind == "helicopter":
         why_not_ground = ("the ground route is closed" if ld["status"] == "passed"
                           else f"the ground route closes by {pd.Timestamp(ld['last_safe_dispatch']):%d %b}")
         why_not_drone = "; ".join(ld["_drone_note"]) or "drones are busy or grounded"
         reason = (f"{trips} sorties to {nodes[src]['name']} on flyable days: {why_not_ground}; {why_not_drone}. "
-                  f"~Rs {per_kg:,.0f}/kg ({closure.cost_basis(ld['road_inr_per_kg'], per_kg)}).")
+                  f"~Rs {per_kg:,.0f}/kg ({costs.basis(ld['road_inr_per_kg'], per_kg)}).")
         assumptions = [("helicopter payload here", f"{o['pay']} kg", "PLACEHOLDER (altitude curve)"),
-                       ("helicopter cost", f"Rs {h['cost_inr_per_hour']['v']:,}/h", "PLACEHOLDER (The Week 2020)"),
+                       ("helicopter cost", f"Rs {costs.HELI_HOUR:,}/h", "PLACEHOLDER (The Week 2020)"),
                        ("helicopter hours per day", f"{F['heli_hours_per_day']['v']}", "PLACEHOLDER")]
     elif kind == "drone":
-        per_day, n_drones, dist, top, _ = o["extra"]
+        n_drones, dist, top, flight, cycle = o["extra"]
         why = "track closed by snow" if ld["status"] == "passed" else "fast and cheap for small urgent loads"
+        days_txt = "; ".join(
+            f"{d:%d %b}: {s} sorties = {min(n_drones, s)} drones x up to {math.ceil(s / min(n_drones, s))} sorties, "
+            f"{s} battery charges" for d, s, _ in sched)
         reason = (f"{trips} drone sorties from {nodes[src]['name']} ({dist:.1f} km, in the {dr['range_km_one_way']['v']} km range; "
-                  f"leg clears {top:,.0f} m, so {o['pay']:.0f} kg per sortie in the 12,000-20,000 ft band): {why}. "
+                  f"leg clears {top:,.0f} m, so {o['pay']:.0f} kg per sortie): {why}. {days_txt}. Each sortie flies "
+                  f"{flight:.0f} min; a drone can fly one every {cycle:.0f} min ({dr['batteries_per_drone']['v']} batteries, "
+                  f"{dr['charge_min']['v']} min to recharge, {dr['swap_min']['v']} min swap). "
                   f"~Rs {per_kg:,.0f}/kg; helicopter would be ~Rs {heli_per_kg:,.0f}/kg (~{heli_per_kg / max(per_kg, 1):.0f}x).")
         assumptions = [("drone payload", f"{o['pay']:.0f} kg", "public source (Army RFP, Tribune Oct 2022)"),
                        ("drone range", f"{dr['range_km_one_way']['v']} km", "public source (RFIs)"),
                        ("drones held", f"{n_drones}", "PLACEHOLDER"),
-                       ("drone cost", f"Rs {dr['cost_inr_per_sortie']['v']:,}/sortie", "PLACEHOLDER"),
+                       ("drone cost", f"Rs {costs.C['drone_inr_per_sortie']['v']:,}/sortie", "PLACEHOLDER"),
+                       ("batteries per drone / recharge", f"{dr['batteries_per_drone']['v']} / {dr['charge_min']['v']} min", "PLACEHOLDER"),
                        ("drone wind limit", f"{dr['max_wind_kmh']['v']} km/h", "PLACEHOLDER")]
     else:
         reason = ("Cannot be moved this week within the limits (helicopter hours, weather windows, fleet). "
@@ -274,6 +293,8 @@ def _line(mode, ld, kind, src, kg, trips, cost_inr, ds, o, nodes) -> dict:
     return {"key": key, "post": ld["post"], "post_name": post, "class": ld["class"], "label": cls["label"],
             "mode": kind, "from": nodes[src]["name"] if src else "", "kg": int(kg), "qty_text": qty_txt,
             "trips": int(trips), "when": when, "days": [d.date().isoformat() for d in ds],
+            "schedule": [{"date": d.date().isoformat(), "trips": int(s), "kg": int(k)} for d, s, k in sched],
+            "heli_hours": round(trips * o["extra"], 1) if kind == "helicopter" else 0,
             "last_safe_dispatch": ld["last_safe_dispatch"], "cost_inr": round(cost_inr),
             "summary": f"{cls['label']} to {post} by {kind}: {qty_txt}" + (f", {when}" if when else ""),
             "reason": reason, "assumptions": [{"name": a, "value": v, "tag": t} for a, v, t in assumptions],

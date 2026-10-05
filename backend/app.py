@@ -1,5 +1,7 @@
 """RASAD API + the built web app, on http://localhost:8000 (this machine only)."""
+import contextlib
 import json
+import threading
 import urllib.error
 from typing import Literal
 
@@ -8,9 +10,24 @@ from fastapi import FastAPI, HTTPException, Path, Query
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from backend import adapters, closure, db, forecast, planner, realdata, world
+from backend import adapters, closure, costs, db, drones, forecast, planner, realdata, scenarios, world
 
-app = FastAPI(title="RASAD", docs_url="/api/docs")
+def warm_up() -> None:
+    """Pre-compute the demo results in the background so the screens open instantly."""
+    try:
+        planner.run("demo")
+        scenarios.all_runs("demo")
+    except Exception as e:  # never block start-up; the endpoints will show the error
+        print("warm-up failed:", e)
+
+
+@contextlib.asynccontextmanager
+async def lifespan(_app):
+    threading.Thread(target=warm_up, daemon=True).start()
+    yield
+
+
+app = FastAPI(title="RASAD", docs_url="/api/docs", lifespan=lifespan)
 Mode = Literal["demo", "live"]  # only two modes: anything else is refused (each mode is cached and costly)
 Location = Literal["leh", "kargil", "drass", "zojila", "baralacha", "tanglang", "sector_x"]
 
@@ -56,6 +73,8 @@ def clear_caches() -> None:
     forecast.clear()
     closure.run.cache_clear()
     planner.run.cache_clear()
+    drones.advise.cache_clear()
+    scenarios.run.cache_clear()
 
 
 @app.get("/api/pnr")
@@ -97,6 +116,25 @@ def decision(d: Decision, mode: Mode = "demo"):
 @app.get("/api/audit")
 def audit(limit: int = Query(200, ge=1, le=1000)):
     return db.query("SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (min(limit, 1000),))
+
+
+@app.get("/api/drones")
+def drone_advisor(mode: Mode = "demo", n: int = Query(20, ge=1, le=500),
+                  band: Literal["up_to_6000ft", "6000_12000ft", "12000_20000ft"] = "12000_20000ft"):
+    """Where should N new drones of a band be based? Ranked by what they save this week."""
+    return drones.advise(mode, n, band)
+
+
+@app.get("/api/scenarios")
+def what_ifs(mode: Mode = "demo"):
+    """The four one-click what-ifs, each with before vs after."""
+    return scenarios.all_runs(mode)
+
+
+@app.get("/api/costs")
+def cost_inputs():
+    """The single set of cost inputs used everywhere, with source and PLACEHOLDER tag."""
+    return costs.INPUTS
 
 
 @app.get("/api/forecast")

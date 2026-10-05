@@ -15,7 +15,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from backend import db, forecast, world
+from backend import costs, db, forecast, world
 
 CLOSURES = json.loads((db.ROOT / "data" / "closures.json").read_text(encoding="utf-8"))
 P, CP = db.PARAMS, db.PARAMS["closure"]
@@ -127,7 +127,7 @@ def _members(location: str, mode: str, snow_scale: float, t_shift: float) -> tup
     return (now - start).days, out
 
 
-def segment(seg_id: str, mode: str) -> dict:
+def segment(seg_id: str, mode: str, days_shift: int = 0) -> dict:
     """Closure-day distribution (one value per past winter) for a real axis or a forward link."""
     status = {r["segment"]: r["status"] for r in db.query("SELECT segment, status FROM road_status")}
     if seg_id in ("NH1-ZOJILA", "NH3-BARALACHA"):
@@ -153,6 +153,7 @@ def segment(seg_id: str, mode: str) -> dict:
         days = np.full(len(mem), today)
     else:
         days = np.array([_closing_day(m, f["C_cm"], f["D_cm"], t, today) for m in mem])
+        days = np.maximum(days + days_shift, today)  # what-if: everything closes `days_shift` days earlier/later
     return {"id": seg_id, "kind": kind, "status": status.get(seg_id, "open"), "today": today,
             "days": days, "reopen_day": reopen}
 
@@ -171,18 +172,6 @@ def _flyable_share() -> float:
     return round(100 * float(ok.mean()), 0)
 
 
-def cost_basis(road_per_kg: float, air_per_kg: float) -> str:
-    """The inputs behind every cost multiple, shown next to it (never a bare 'x times')."""
-    return (f"road Rs {road_per_kg:.1f}/kg vs helicopter Rs {air_per_kg:,.0f}/kg; inputs: truck Rs 1 lakh per 10 t "
-            "Srinagar-Leh round trip, helicopter Rs 4 lakh per 45-min sortie (The Week, 2020); PLACEHOLDER")
-
-
-COST_INPUTS = {"truck_inr_per_kg_km": M["truck"]["cost_inr_per_kg_km"]["v"],
-               "truck_basis": "Rs 1 lakh per 10-tonne round trip, Srinagar-Leh (~420 km)",
-               "heli_inr_per_sortie_45min": 400000, "heli_inr_per_hour": M["helicopter"]["cost_inr_per_hour"]["v"],
-               "source": "The Week, 13 Aug 2020 (retired officer quoted)", "tag": "PLACEHOLDER"}
-
-
 def _air(post: dict, nodes: dict) -> dict:
     """Helicopter from Leh to the post's helipad (or the nearest one, then porters)."""
     pads = [n for n in nodes.values() if n["helipad"] and n["kind"] != "depot"]
@@ -191,21 +180,22 @@ def _air(post: dict, nodes: dict) -> dict:
     curve = np.array(h["payload_kg_by_alt_m"]["v"])
     payload = float(np.interp(pad["alt_m"], curve[:, 0], curve[:, 1]))
     hours = 2 * _dist_km(nodes["LEH"], pad) / h["speed_kmh"]["v"] + h["handling_hours"]["v"]
-    per_kg = hours * h["cost_inr_per_hour"]["v"] / payload
+    per_kg = costs.heli_sortie(hours) / payload
     if pad is not post:  # last leg on foot
-        per_kg += _dist_km(pad, post) * 1.4 * M["porter"]["cost_inr_per_trip_km"]["v"] / M["porter"]["payload_kg"]["v"]
+        per_kg += costs.foot_per_kg("porter", _dist_km(pad, post) * 1.4)
     return {"pad": pad["name"], "payload_kg": round(payload), "sortie_hours": round(hours, 2), "inr_per_kg": per_kg}
 
 
-@functools.lru_cache(maxsize=4)
-def run(mode: str = "demo") -> dict:
+@functools.lru_cache(maxsize=8)
+def run(mode: str = "demo", shift: int = 0, strength: tuple = ()) -> dict:
+    """shift: what-if closure shift in days (e.g. -10). strength: what-if ((post, factor), ...)."""
     now = world.clock(mode).normalize()
     start = _season_start(now)
     date = lambda d: (start + int(d) * DAY).date().isoformat()
     q = 100 * (1 - CP["confidence"]["v"])  # 20th percentile: still open with 80% probability
     nodes = {n["id"]: n for n in db.query("SELECT * FROM nodes")}
     links = {l["to_node"]: l for l in db.query("SELECT * FROM links")}
-    fc = forecast.run(mode)["forecast"]
+    fc = forecast.forecast(mode, dict(strength)) if strength else forecast.run(mode)["forecast"]
     stock = world.stock(mode).set_index(["post", "class"])["qty"]
     flyable = _flyable_share()
     segs = {}
@@ -213,7 +203,7 @@ def run(mode: str = "demo") -> dict:
     for post in sorted(i for i, n in nodes.items() if n["kind"] == "post"):
         route = [links[post], links[links[post]["from_node"]]]  # roadhead -> post, depot -> roadhead
         for l in route:
-            segs.setdefault(l["id"], segment(l["id"], mode))
+            segs.setdefault(l["id"], segment(l["id"], mode, shift))
         close = np.min([segs[l["id"]]["days"] for l in route], axis=0)
         reopen = max(segs[l["id"]]["reopen_day"] for l in route)
         today = segs[route[0]["id"]]["today"]
@@ -223,9 +213,7 @@ def run(mode: str = "demo") -> dict:
         transit = math.ceil(hours / M["truck"]["drive_hours_per_day"]["v"])
         safe_day = int(np.percentile(close, q, method="lower"))
         last_safe = safe_day - transit - CP["loading_buffer_days"]["v"]
-        road_per_kg = (km["road"] * M["truck"]["cost_inr_per_kg_km"]["v"]
-                       + km["jeep_track"] * M["truck"]["cost_inr_per_kg_km"]["v"] * M["truck"]["jeep_cost_factor"]["v"]
-                       + km["mule_track"] * M["mule"]["cost_inr_per_trip_km"]["v"] / M["mule"]["payload_kg"]["v"])
+        road_per_kg = costs.road(km["road"], km["jeep_track"]) + costs.foot_per_kg("mule", km["mule_track"])
         air = _air(nodes[post], nodes)
         curves[post] = [{"date": date(today + i), "p_closed": round(float(np.mean(close <= today + i)), 2)}
                         for i in range(120)]
@@ -251,11 +239,11 @@ def run(mode: str = "demo") -> dict:
             elif status == "passed":
                 headline = (f"{name}: the ground route is already closed or will close before a convoy arrives. "
                             f"Air maintenance needed now, ~{multiple:.0f}x the road cost "
-                            f"({cost_basis(road_per_kg, air['inr_per_kg'])}).")
+                            f"({costs.basis(road_per_kg, air['inr_per_kg'])}).")
             else:
                 headline = (f"{name}: last safe {by} dispatch {pd.Timestamp(date(last_safe)):%d %b} "
                             f"({CP['confidence']['v']:.0%} confidence). After that: air maintenance, ~{multiple:.0f}x cost "
-                            f"({cost_basis(road_per_kg, air['inr_per_kg'])}).")
+                            f"({costs.basis(road_per_kg, air['inr_per_kg'])}).")
             items.append({
                 "post": post, "post_name": nodes[post]["name"], "class": cls, "label": c["label"], "unit": c["unit"],
                 "status": status, "headline": headline, "dispatch_by": by, "route": [l["id"] for l in route][::-1],
@@ -267,14 +255,14 @@ def run(mode: str = "demo") -> dict:
                 "need_until_reopen": round(need, 1), "need_until_reopen_p90": round(need_hi, 1),
                 "shortfall": round(short, 1), "shortfall_kg": round(short_kg),
                 "road_inr_per_kg": round(road_per_kg, 1), "air_inr_per_kg": round(air["inr_per_kg"]),
-                "cost_multiple": round(multiple), "cost_basis": cost_basis(road_per_kg, air["inr_per_kg"]),
-                "cost_inputs": COST_INPUTS, "air_pad": air["pad"], "heli_payload_kg": air["payload_kg"],
+                "cost_multiple": round(multiple), "cost_basis": costs.basis(road_per_kg, air["inr_per_kg"]),
+                "cost_inputs": costs.INPUTS, "air_pad": air["pad"], "heli_payload_kg": air["payload_kg"],
                 "heli_sorties": sorties, "heli_hours": round(sorties * air["sortie_hours"], 1),
                 "air_cost_inr_lakh": round(short_kg * air["inr_per_kg"] / 1e5, 1),
                 "flyable_winter_pct": flyable})
     axes = []
     for seg_id, name in (("NH1-ZOJILA", "NH-1 Zoji La (real)"), ("NH3-BARALACHA", "NH-3 Manali-Leh (real)")):
-        s = segment(seg_id, mode)
+        s = segment(seg_id, mode, shift)
         axes.append({"id": seg_id, "name": name, "status": s["status"],
                      "closure_p20": date(np.percentile(s["days"], 20, method="lower")),
                      "closure_p50": date(np.percentile(s["days"], 50, method="lower")),
