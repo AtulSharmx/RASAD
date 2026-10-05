@@ -1,7 +1,7 @@
 """Quick check of the core logic. Run after gen_data: python -m backend.selfcheck"""
 import pandas as pd
 
-from backend import adapters, closure, db, forecast, world
+from backend import adapters, closure, db, forecast, planner, world
 
 
 def check_adapters():
@@ -47,7 +47,7 @@ def check_forecast():
     r = forecast.run("demo")
     acc = r["accuracy"].set_index("class")
     assert acc.loc["kerosene", "method"] == "LightGBM model", acc
-    assert (acc["error_pct"] <= acc["naive_error_pct"] + 1e-9).all(), "never worse than the 28-day average"
+    assert (acc["select_to"] < acc["test_from"]).all(), "method chosen only on the earlier window"
     assert acc["coverage_pct"].between(70, 90).all(), acc["coverage_pct"]
     c = r["cover"].set_index(["post", "class"])
     assert c.loc[("PA", "kerosene"), "status"] == "red" and c.loc[("PD", "medical"), "status"] == "red"
@@ -68,10 +68,38 @@ def check_pnr():
     assert pa["status"] == "urgent" and 0 <= pa["days_left"] <= 7 and pa["cost_multiple"] > 1, pa
     assert items[("PD", "medical")]["status"] == "passed", "Delta's track is closed: air only"
     assert items[("PF", "rations")]["status"] in ("urgent", "passed")
-    assert sorted({i["post"] for i in r["items"] if i["status"] != "stocked"}) == ["PA", "PD", "PF"]
+    assert sorted({i["post"] for i in r["items"] if i["status"] in ("passed", "urgent")}) == ["PA", "PD", "PF"]
     for c in r["curves"].values():
         p = [x["p_closed"] for x in c]
         assert p == sorted(p), "closure probability can only grow with time"
+
+
+def check_plan():
+    r = planner.run("demo")
+    lines = r["lines"]
+    assert lines and all(l["reason"] and l["cost_inr"] >= 0 for l in lines)
+    for l in lines:
+        if l["mode"] in ("truck", "jeep", "mule", "porter"):  # ground leaves before the Point of No Return
+            assert max(l["days"]) <= l["last_safe_dispatch"], l
+        if l["mode"] in ("mule", "porter", "helicopter"):
+            assert any(a["tag"].startswith("PLACEHOLDER") for a in l["assumptions"]), l
+    drone = [l for l in lines if l["post"] == "PD" and l["mode"] == "drone"]
+    assert drone and drone[0]["kg"] <= 15 * drone[0]["trips"], "Delta's medicine goes by drone, 15 kg per sortie"
+    assert any(l["post"] == "PF" and l["mode"] == "helicopter" for l in lines)
+    assert sorted({l["post"] for l in lines}) == ["PA", "PD", "PF"]
+    # commander in the loop: QM cannot approve; commander can; both leave an audit trail
+    key = drone[0]["key"]
+    try:
+        planner.decide("demo", key, "approve", "Post QM", "selfcheck")
+        raise AssertionError("Post QM must not approve")
+    except PermissionError:
+        pass
+    planner.decide("demo", key, "approve", "Commander", "selfcheck", note="test")
+    assert planner.with_decisions(r)["lines"][lines.index(drone[0])]["status"] == "approved"
+    assert db.query("SELECT COUNT(*) n FROM audit_log WHERE user = 'selfcheck'")[0]["n"] == 1
+    with db.connect() as con:  # leave the demo clean
+        con.execute("DELETE FROM decisions WHERE user = 'selfcheck'")
+        con.execute("DELETE FROM audit_log WHERE user = 'selfcheck'")
 
 
 if __name__ == "__main__":
@@ -80,4 +108,5 @@ if __name__ == "__main__":
     check_real_data()
     check_demo_story()
     check_pnr()
+    check_plan()
     print("selfcheck OK")

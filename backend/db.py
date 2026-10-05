@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS terrain(id TEXT, lat REAL NOT NULL, lon REAL NOT NULL
     source TEXT);
 CREATE TABLE IF NOT EXISTS geometry(id TEXT NOT NULL, kind TEXT NOT NULL, name TEXT, ref TEXT, ele TEXT,
     geometry TEXT NOT NULL, source TEXT);
+CREATE TABLE IF NOT EXISTS decisions(key TEXT PRIMARY KEY, status TEXT NOT NULL, kg REAL, note TEXT,
+    role TEXT, user TEXT, ts TEXT);
+CREATE TABLE IF NOT EXISTS audit_log(id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, role TEXT,
+    user TEXT, action TEXT NOT NULL, item TEXT, before TEXT, after TEXT, note TEXT);
 CREATE TABLE IF NOT EXISTS source_runs(source TEXT, ts TEXT, ok INTEGER, records INTEGER,
     rejected INTEGER, last_record TEXT, error TEXT);
 CREATE INDEX IF NOT EXISTS ix_cons ON consumption(post, class, date);

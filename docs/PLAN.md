@@ -73,10 +73,13 @@ Supply classes: rations (kg), kerosene/fuel (litres), medical (kg), batteries/sp
 Role switcher in the header: Commander / Logistics Officer / Post QM (demo only, no real login).
 
 ## 6. Demo story (data built around it)
-Simulated date **25 Oct 2026**, "Sector X (fictional)". Rear nodes: Leh (main depot), Kargil, Drass (real public towns). Real axes: Zoji La (NH-1) and Manali–Leh (Baralacha La, Tanglang La). Forward: 8 fictional posts, **Alpha–Hotel**, at 3,900–5,600 m, reached from fictional roadheads by jeep track or mule track. Some have helipads; there are 2 candidate drone bases. The seed is set so that:
+Simulated date **25 Oct 2026**, "Sector X (fictional)". Rear nodes: Leh (main depot), Kargil, Drass (real public towns). Real axes: Zoji La (NH-1) and Manali–Leh (Baralacha La, Tanglang La). Forward: 8 fictional posts, **Alpha–Hotel**, at 4,100–5,400 m (real DEM heights at made-up inland spots), reached from fictional roadheads by jeep track or mule track. Some have helipads; Node Mike is a candidate drone base. The numbers below are **computed by the app** (updated 5 Oct 2026). Every cost multiple is shown with its inputs: truck Rs 1 lakh per 10 t and helicopter Rs 4 lakh per 45-min sortie (The Week, 2020), tagged PLACEHOLDER.
 1. Dashboard → **3 posts at risk** (Alpha, Delta, Foxtrot).
-2. **PNR alert:** "Post Alpha kerosene: last safe truck dispatch 28 Oct (80% confidence). After that: air maintenance, ~40× cost."
-3. **Plan:** "Medicines to Post Delta by drone: 8 kg, urgent, track closed by snow; helicopter would cost ~40×."
+2. **PNR alert:** "Post Alpha kerosene: last safe truck + jeep dispatch **29 Oct** (80% confidence). After that: air maintenance, **~220×** cost (road Rs 3.8/kg vs helicopter Rs 844/kg; inputs as above; PLACEHOLDER)."
+3. **Plan:**
+   - "Medicines to Post Delta by drone: **274 kg in 19 sorties on 26 Oct** from Roadhead Lima (8.5 km, 15 kg per sortie). The track is closed by snow; a helicopter + porters would be ~Rs 1,344/kg vs ~Rs 106/kg (**~13×**)."
+   - Alpha kerosene goes by jeep and mule before 29 Oct.
+   - Foxtrot rations go by mule and porter today, then 30 helicopter sorties.
 4. **Drone advisor:** "20 high-altitude drones at Base K-1 save ~N helicopter hours/winter."
 5. **What-if** "pass closes 10 days early" → Alpha and Foxtrot turn red, helicopter hours jump.
 6. **Sources** page → add a config file → a new stream appears.

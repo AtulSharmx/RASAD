@@ -47,7 +47,12 @@
       "endurance_min": {"v": 40, "src": "FACTS 3: Sabal 20"},
       "cost_inr_per_sortie": {"v": 1500, "src": "PLACEHOLDER: battery, wear and crew time"},
       "max_wind_kmh": {"v": 35, "src": "PLACEHOLDER: no public wind limit found"},
-      "max_snowfall_cm": {"v": 1, "src": "PLACEHOLDER"}
+      "max_snowfall_cm": {"v": 1, "src": "PLACEHOLDER"},
+      "handling_min": {"v": 10, "src": "PLACEHOLDER: load, battery swap, unload per sortie"},
+      "op_hours_per_day": {"v": 8, "src": "PLACEHOLDER: daylight flying hours"},
+      "max_sorties_per_day": {"v": 12, "src": "PLACEHOLDER: battery cycles per drone per day"},
+      "clearance_m": {"v": 400, "src": "FACTS 3: 2026 RFI flies 1,200-1,500 ft above ground (~400 m)"},
+      "ceiling_m": {"v": 6096, "src": "FACTS 3: top of the 12,000-20,000 ft band"}
     },
     "mule": {
       "payload_kg": {"v": 40, "src": "FACTS 4: lower public figure (40-72.5 kg reported)"},
@@ -68,7 +73,13 @@
     "drones_at": {"v": {"RH-L": 4}, "src": "PLACEHOLDER: drones already held"},
     "mules_at": {"v": {"RH-K": 20, "RH-L": 20}, "src": "PLACEHOLDER"},
     "porters_at": {"v": {"RH-K": 15, "RH-L": 15}, "src": "PLACEHOLDER"},
-    "trucks": {"v": 10, "src": "PLACEHOLDER"}
+    "trucks": {"v": 10, "src": "PLACEHOLDER"},
+    "jeeps": {"v": 12, "src": "PLACEHOLDER: light vehicles for jeep tracks"}
+  },
+  "planner": {
+    "horizon_days": {"v": 7, "src": "Team choice"},
+    "undelivered_inr_per_kg": {"v": {"medical": 50000, "rations": 5000, "kerosene": 5000, "batteries_spares": 3000, "winter_clothing": 3000}, "src": "Team choice: the 'cost' of leaving a kg undelivered this week; set above any air cost so urgent loads always move"},
+    "delay_inr_per_kg_day": {"v": {"medical": 200, "rations": 10, "kerosene": 10, "batteries_spares": 5, "winter_clothing": 5}, "src": "Team choice: prefer earlier delivery; x10 once the post would run out"}
   },
   "cover": {
     "red_days": {"v": 7, "src": "Team choice: red if stock may run out within 7 days (bad-case demand)"},
@@ -77,6 +88,7 @@
   "closure": {
     "confidence": {"v": 0.8, "src": "Team choice: plan on the date the route is still open with 80% probability"},
     "loading_buffer_days": {"v": 1, "src": "PLACEHOLDER"},
+    "margin_days": {"v": 14, "src": "Team choice: a winter gap smaller than 14 days of current use is inside the forecast error; flagged for review, not urgent"},
     "threshold_factor": {"v": {"road": 0.8, "jeep_track": 0.5, "mule_track": 0.4}, "src": "PLACEHOLDER: forward roads and tracks are not cleared like national highways, so they close at this fraction of the fitted Manali-Leh snow threshold"},
     "snow_per_1000m": {"v": 0.3, "src": "PLACEHOLDER: extra snowfall share per 1,000 m above 4,000 m"},
     "track_reopen_lag_days": {"v": 30, "src": "PLACEHOLDER: forward roads and tracks reopen this long after the Manali-Leh highway"}
