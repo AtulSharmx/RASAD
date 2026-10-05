@@ -51,6 +51,15 @@ def sector():
             "osm": [{**r, "geometry": json.loads(r["geometry"])} for r in db.query("SELECT * FROM geometry")]}
 
 
+@app.get("/api/terrain")
+def terrain():
+    """Real Copernicus DEM grid (heights in m) for the offline relief map."""
+    g = realdata.GRID
+    pts = db.query("SELECT lat, lon, elev_m FROM terrain WHERE id = 'grid'")
+    return {"lat0": g["lat"][0], "lon0": g["lon"][0], "lat1": g["lat"][1], "lon1": g["lon"][1], "step": g["step"],
+            "points": [[p["lat"], p["lon"], p["elev_m"]] for p in pts]}
+
+
 @app.get("/api/weather")
 def weather(location: Location = "sector_x", mode: Mode = "demo"):
     return world.weather(location, mode).reset_index().to_dict("records")
