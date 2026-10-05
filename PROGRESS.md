@@ -32,6 +32,12 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
 
 - **Safety check (5 Oct 2026):** `backend/safety_check.py` (run by hand) checks every fictional site is ≥50 km from any real international boundary/LoC/LAC (Natural Earth lines, held in memory only, never saved or shown) and ≥5 km from any OSM-mapped military feature. Writes `docs/SAFETY_CHECK.md`; current result: all 14 fictional sites OK (60–97 km from boundary, 12.7–38 km from mapped military features).
 
+- **Fixes before Step 4 (5 Oct 2026):**
+  - Band calibration: a band-widening factor is chosen on the 60 days *before* the hold-out, then scored on the hold-out. Coverage is now 76–86% (it was 70–77%). The live forecast uses a factor re-fitted on the latest 60 days.
+  - Per class, the better method on the hold-out is used: model or 28-day average (the model must win by ≥1 percentage point). Kerosene, rations and winter clothing → model; batteries and medical → 28-day average. `/api/forecast` returns `method` and `why` for the screen.
+  - Safety: `python -m backend.safety_check` → `docs/SAFETY_CHECK.md`. Natural Earth boundary lines are used in memory only (never saved or shown). Every fictional site is ≥54 km from any boundary/LoC/LAC (posts ≥60 km) and ≥12.7 km from any military feature mapped in OSM. ALL OK.
+  - Git: `credential.helper manager`. Run `git push` **without** a `timeout` wrapper (the login window needs it), ideally in the background.
+
 ## Next
 - Step 4: Point of No Return (`backend/closure.py`). For each pass/col: fit a snowfall trigger to the real closure dates (FACTS §1), apply it to ~30 winters of real weather → closure-date distribution, shifted by this season's snow so far. Last safe dispatch = closure date at 80% confidence − transit − buffer. Show helicopter hours and the cost multiple after that date. Read through `world.py` and take `mode`.
 
