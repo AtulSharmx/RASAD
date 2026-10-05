@@ -1,0 +1,117 @@
+{
+ "issued": "2026-10-25T05:30",
+ "segments": [
+  {
+   "seg_id": "NH1-ZOJILA",
+   "name": "NH-1 Zoji La",
+   "state": "OPEN",
+   "remarks": "Open. Night movement suspended.",
+   "updated": "2026-10-25T05:30"
+  },
+  {
+   "seg_id": "NH3-BARALACHA",
+   "name": "NH-3 Baralacha La",
+   "state": "OPEN",
+   "remarks": "Open for all vehicles.",
+   "updated": "2026-10-25T05:10"
+  },
+  {
+   "seg_id": "NH3-TANGLANG",
+   "name": "NH-3 Tanglang La",
+   "state": "OPEN",
+   "remarks": "Open for all vehicles.",
+   "updated": "2026-10-25T04:50"
+  },
+  {
+   "seg_id": "RHK-PA",
+   "name": "Track Kilo - Alpha (Col Uniform)",
+   "state": "RESTD",
+   "remarks": "Fresh snow 20 cm at Col Uniform. One-way, chains required.",
+   "updated": "2026-10-25T04:30"
+  },
+  {
+   "seg_id": "RHL-PD",
+   "name": "Mule track Lima - Delta",
+   "state": "CLOSED",
+   "remarks": "Blocked by snow since 23 Oct.",
+   "updated": "2026-10-25T04:10"
+  },
+  {
+   "seg_id": "LEH-KGL",
+   "name": "LEH-KGL",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T03:50"
+  },
+  {
+   "seg_id": "DRS-KGL",
+   "name": "DRS-KGL",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T03:30"
+  },
+  {
+   "seg_id": "LEH-RHK",
+   "name": "LEH-RHK",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T03:10"
+  },
+  {
+   "seg_id": "KGL-RHL",
+   "name": "KGL-RHL",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T02:50"
+  },
+  {
+   "seg_id": "RHK-PB",
+   "name": "RHK-PB",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T02:30"
+  },
+  {
+   "seg_id": "RHK-PC",
+   "name": "RHK-PC",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T02:10"
+  },
+  {
+   "seg_id": "RHK-PG",
+   "name": "RHK-PG",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T01:50"
+  },
+  {
+   "seg_id": "RHL-PE",
+   "name": "RHL-PE",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T01:30"
+  },
+  {
+   "seg_id": "RHL-PF",
+   "name": "RHL-PF",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T01:10"
+  },
+  {
+   "seg_id": "RHL-PH",
+   "name": "RHL-PH",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T00:50"
+  },
+  {
+   "seg_id": "RHL-NM",
+   "name": "RHL-NM",
+   "state": "OPEN",
+   "remarks": "Open.",
+   "updated": "2026-10-25T00:30"
+  }
+ ]
+}

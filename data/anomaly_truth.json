@@ -1,0 +1,26 @@
+[
+ {
+  "post": "PB",
+  "class": "rations",
+  "start": "2026-08-14",
+  "end": "2026-08-14",
+  "factor": 10,
+  "kind": "data entry error"
+ },
+ {
+  "post": "PH",
+  "class": "kerosene",
+  "start": "2026-09-10",
+  "end": "2026-09-24",
+  "factor": 1.45,
+  "kind": "possible pilferage"
+ },
+ {
+  "post": "PC",
+  "class": "medical",
+  "start": "2026-10-10",
+  "end": "2026-10-16",
+  "factor": 3,
+  "kind": "genuine surge"
+ }
+]

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS consumption(date TEXT NOT NULL, post TEXT NOT NULL, c
 CREATE TABLE IF NOT EXISTS weather(date TEXT NOT NULL, location TEXT NOT NULL, tmax REAL, tmin REAL,
     snowfall_cm REAL, precip_mm REAL, snow_depth_m REAL, wind_max_kmh REAL, gust_max_kmh REAL,
     cloud_pct REAL, wcode INTEGER, simulated INTEGER NOT NULL, source TEXT);
-CREATE TABLE IF NOT EXISTS road_status(segment TEXT NOT NULL, status TEXT NOT NULL, reason TEXT,
+CREATE TABLE IF NOT EXISTS road_status(segment TEXT NOT NULL, name TEXT, status TEXT NOT NULL, reason TEXT,
     updated TEXT, source TEXT);
 CREATE TABLE IF NOT EXISTS airlift(date TEXT NOT NULL, sortie TEXT, aircraft TEXT, base TEXT,
     hours REAL NOT NULL, tasked_to TEXT, source TEXT);

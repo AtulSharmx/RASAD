@@ -4,7 +4,7 @@
     "now": "2026-10-25T06:00",
     "seed": 42,
     "history_start": "2024-10-01",
-    "analog_year": {"v": 2021, "src": "Weather after the last real day is copied from this past year (same dates) and labelled simulated"}
+    "analog_year": {"v": 2021, "src": "Weather after the last real day is copied from Oct 2021 onward (same dates) and labelled simulated. Chosen because Oct 2021 was a real early-snow year (FACTS 1b): 22 cm on 23 Oct at the sector grid point, then clear and -15 to -22 C"}
   },
   "classes": {
     "rations": {"label": "Rations", "unit": "kg", "kg_per_unit": 1.0, "priority": 2,
