@@ -44,7 +44,7 @@ def live_refresh():
     except (urllib.error.URLError, TimeoutError) as e:
         raise HTTPException(503, f"No internet - still using the cached forecast ({e})")
     adapters.sync({"open_meteo_forecast"})
-    forecast.run.cache_clear()
+    forecast.clear()
     return adapters.status()
 
 
@@ -52,7 +52,8 @@ def live_refresh():
 def forecast_summary(mode: str = "demo"):
     r = forecast.run(mode)
     return {"accuracy": records(r["accuracy"]), "cover": records(r["cover"]),
-            "note": "Accuracy is measured on simulated consumption data; real accuracy is known only on real CICG data."}
+            "note": "Accuracy is measured on simulated consumption data; real accuracy is known only on real CICG data. "
+                    "The method is chosen on the same 60 days it is scored on, so the score is slightly optimistic."}
 
 
 @app.get("/api/forecast/{post}")
@@ -79,7 +80,7 @@ def sources():
 @app.post("/api/sources/sync")
 def sync():
     adapters.sync()
-    forecast.run.cache_clear()
+    forecast.clear()
     return adapters.status()
 
 

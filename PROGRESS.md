@@ -26,8 +26,11 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - Backtest on the last 60 days vs the naive "28-day average" (WAPE). Demo result: kerosene 10% vs 39%, rations 5% vs 11%, medical 28% vs 29%, batteries 17% vs 17%, clothing 32% vs 36%. P10–P90 band coverage 70–77% (slightly narrow; say so honestly).
   - Days of cover = days until the cumulative forecast passes the stock (P50; low = P90 demand, high = P10). Red < 7 / amber < 14 days (bad case), set in `params.json` → `cover`.
   - Demo: Alpha kerosene **4 days** (the naive average says ~9: a cold snap is coming), Delta medical 3 days (red), Foxtrot rations 11 days (amber) = **3 posts at risk**.
-  - `forecast.run(mode)` is cached; it is cleared after a sync or a live refresh. Takes ~6 s per mode.
+  - `forecast.run(mode)` is cached; it is cleared after a sync or a live refresh (`forecast.clear()`). Takes ~6 s per mode.
   - API: `/api/forecast?mode=` (accuracy + cover), `/api/forecast/{post}?mode=&days=`.
+  - **Calibration (5 Oct 2026):** per class, `evaluate()` scores the LightGBM model against the 28-day average on a hold-out window and keeps whichever is clearly better (model must win by ≥1 point of WAPE, else the simpler naive method is used — kerosene, rations and clothing use the model; medical and batteries use the naive average). The winning method's P10–P90 band is then widened by the smallest factor that makes it cover ~80% of real days (`_calibrate`), fitted separately from the score so the reported accuracy stays honest. `/api/forecast` says so in its `note`.
+
+- **Safety check (5 Oct 2026):** `backend/safety_check.py` (run by hand) checks every fictional site is ≥50 km from any real international boundary/LoC/LAC (Natural Earth lines, held in memory only, never saved or shown) and ≥5 km from any OSM-mapped military feature. Writes `docs/SAFETY_CHECK.md`; current result: all 14 fictional sites OK (60–97 km from boundary, 12.7–38 km from mapped military features).
 
 ## Next
 - Step 4: Point of No Return (`backend/closure.py`). For each pass/col: fit a snowfall trigger to the real closure dates (FACTS §1), apply it to ~30 winters of real weather → closure-date distribution, shifted by this season's snow so far. Last safe dispatch = closure date at 80% confidence − transit − buffer. Show helicopter hours and the cost multiple after that date. Read through `world.py` and take `mode`.
