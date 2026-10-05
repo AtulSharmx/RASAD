@@ -7,7 +7,7 @@
   "format": "json",
   "path": "data/feeds/bro_road_status.json",
   "records": "segments",
-  "map": {"segment": "seg_id", "status": "state", "reason": "remarks", "updated": "updated"},
+  "map": {"segment": "seg_id", "name": "name", "status": "state", "reason": "remarks", "updated": "updated"},
   "value_map": {"status": {"OPEN": "open", "RESTD": "restricted", "CLOSED": "closed"}},
   "time_field": "updated",
   "stale_after_hours": 12
