@@ -2,12 +2,19 @@
 import json
 import urllib.error
 
+import pandas as pd
+
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 
-from backend import adapters, db, realdata, world
+from backend import adapters, db, forecast, realdata, world
 
 app = FastAPI(title="RASAD", docs_url="/api/docs")
+
+
+def records(df) -> list[dict]:
+    """DataFrame -> plain JSON rows (numpy numbers and dates made safe)."""
+    return json.loads(df.to_json(orient="records", date_format="iso"))
 
 
 @app.get("/api/health")
@@ -37,7 +44,26 @@ def live_refresh():
     except (urllib.error.URLError, TimeoutError) as e:
         raise HTTPException(503, f"No internet - still using the cached forecast ({e})")
     adapters.sync({"open_meteo_forecast"})
+    forecast.run.cache_clear()
     return adapters.status()
+
+
+@app.get("/api/forecast")
+def forecast_summary(mode: str = "demo"):
+    r = forecast.run(mode)
+    return {"accuracy": records(r["accuracy"]), "cover": records(r["cover"]),
+            "note": "Accuracy is measured on simulated consumption data; real accuracy is known only on real CICG data."}
+
+
+@app.get("/api/forecast/{post}")
+def forecast_post(post: str, mode: str = "demo", days: int = 60):
+    """Last `days` of actual use and the next `days` of forecast (P10/P50/P90) for each class."""
+    now = world.clock(mode).normalize()
+    hist = world.consumption(mode)
+    hist = hist[(hist["post"] == post) & (hist["date"] >= (now - pd.Timedelta(days=days)).date().isoformat())]
+    fc = forecast.run(mode)["forecast"]
+    fc = fc[(fc["post"] == post) & (fc["date"] < now + pd.Timedelta(days=days))]
+    return {"actual": records(hist), "forecast": records(fc)}
 
 
 @app.get("/api/stock")
@@ -53,6 +79,7 @@ def sources():
 @app.post("/api/sources/sync")
 def sync():
     adapters.sync()
+    forecast.run.cache_clear()
     return adapters.status()
 
 
