@@ -2,6 +2,7 @@
   "id": "iaf_airlift",
   "name": "Helicopter airlift allotment (IAF-like schedule)",
   "owner": "Air effort allotted to the sector",
+  "label": "Simulated — military data is classified; in deployment this comes from the IAF airlift schedule via adapters",
   "simulated": true,
   "target": "airlift",
   "format": "csv",

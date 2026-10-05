@@ -2,6 +2,7 @@
   "id": "iot_fuel",
   "name": "IoT fuel-tank level sensors",
   "owner": "Sensors at each post, one reading every 4 hours",
+  "label": "Simulated — military data is classified; in deployment this comes from the post's IoT fuel sensors via adapters",
   "simulated": true,
   "target": "stock",
   "format": "jsonl",

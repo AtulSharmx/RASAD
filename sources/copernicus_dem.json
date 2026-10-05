@@ -1,0 +1,10 @@
+{
+  "id": "copernicus_dem",
+  "name": "Terrain height (Copernicus DEM GLO-90, real, cached)",
+  "owner": "Copernicus DEM (c) DLR / Airbus, provided under COPERNICUS by the EU and ESA - via the Open-Meteo elevation API",
+  "label": "Real data",
+  "simulated": false,
+  "target": "terrain",
+  "format": "csv",
+  "path": "data/real/dem.csv"
+}

@@ -1,23 +1,43 @@
 """RASAD API + the built web app, on http://localhost:8000 (this machine only)."""
-from fastapi import FastAPI
+import json
+import urllib.error
+
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 
-from backend import adapters, db
+from backend import adapters, db, realdata, world
 
 app = FastAPI(title="RASAD", docs_url="/api/docs")
 
 
 @app.get("/api/health")
-def health():
-    return {"ok": True, "now": db.PARAMS["demo"]["now"], "sector": db.SECTOR["label"],
-            "note": "Runs fully on-premise. Simulated for prototype."}
+def health(mode: str = "demo"):
+    return {"ok": True, "mode": mode, "now": world.clock(mode).isoformat(), "sector": db.SECTOR["label"],
+            "note": "Runs fully on-premise. Military data is simulated; weather, terrain and roads are real."}
 
 
 @app.get("/api/sector")
 def sector():
     return {"label": db.SECTOR["label"], "note": db.SECTOR["note"], "nodes": db.query("SELECT * FROM nodes"),
             "passes": db.query("SELECT * FROM passes"), "links": db.query("SELECT * FROM links"),
-            "axes": db.SECTOR["axes"], "roads": db.query("SELECT * FROM road_status")}
+            "axes": db.SECTOR["axes"], "roads": db.query("SELECT * FROM road_status"),
+            "osm": [{**r, "geometry": json.loads(r["geometry"])} for r in db.query("SELECT * FROM geometry")]}
+
+
+@app.get("/api/weather")
+def weather(location: str = "sector_x", mode: str = "demo"):
+    return world.weather(location, mode).reset_index().to_dict("records")
+
+
+@app.post("/api/live/refresh")
+def live_refresh():
+    """Live mode: download a fresh 16-day forecast (needs internet). The old cache stays if offline."""
+    try:
+        realdata.fetch_forecast()
+    except (urllib.error.URLError, TimeoutError) as e:
+        raise HTTPException(503, f"No internet - still using the cached forecast ({e})")
+    adapters.sync({"open_meteo_forecast"})
+    return adapters.status()
 
 
 @app.get("/api/stock")

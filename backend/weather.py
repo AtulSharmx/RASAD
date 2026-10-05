@@ -29,6 +29,23 @@ LOCATIONS = {
     "drass": (34.4317, 75.7543, None, "2010-01-01"),
 }
 
+UA = "RASAD-prototype/0.1 (SIH 2026 student project; offline cache)"
+
+
+def fetch_json(url: str, data: bytes | None = None):
+    """GET (or POST data) with polite retries when a free API says 'too many requests'."""
+    req = urllib.request.Request(url, data=data, headers={"User-Agent": UA, "Accept": "application/json"})
+    for attempt in range(60):
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 504) or attempt == 59:
+                raise
+            print("    server busy / rate limited, waiting 70 s ...", flush=True)
+            time.sleep(70)
+
+
 DAILY = {  # Open-Meteo name -> our column
     "temperature_2m_max": "tmax",
     "temperature_2m_min": "tmin",
@@ -50,17 +67,7 @@ def download(name: str, end: str) -> Path:
     }
     if elev is not None:
         q["elevation"] = elev
-    url = "https://archive-api.open-meteo.com/v1/archive?" + urllib.parse.urlencode(q)
-    for attempt in range(60):  # free API rate limit: wait and retry
-        try:
-            with urllib.request.urlopen(url, timeout=180) as r:
-                d = json.load(r)["daily"]
-            break
-        except urllib.error.HTTPError as e:
-            if e.code != 429 or attempt == 59:
-                raise
-            print("    rate limited, waiting 70 s ...", flush=True)
-            time.sleep(70)
+    d = fetch_json("https://archive-api.open-meteo.com/v1/archive?" + urllib.parse.urlencode(q))["daily"]
     df = pd.DataFrame(d).rename(columns={"time": "date", **DAILY})
     df = df.dropna(subset=["tmax", "tmin"])  # the last day or two can be empty
     df.insert(1, "location", name)

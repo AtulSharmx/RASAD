@@ -13,7 +13,7 @@ import pandas as pd
 from backend import db
 
 SOURCES_DIR = db.ROOT / "sources"
-TARGETS = {"stock", "consumption", "weather", "road_status", "airlift"}
+TARGETS = {"stock", "consumption", "weather", "road_status", "airlift", "terrain", "geometry"}
 
 
 def configs() -> list[dict]:
@@ -59,17 +59,19 @@ def transform(df: pd.DataFrame, cfg: dict, target_cols: list[str]) -> tuple[pd.D
     keep = [c for c in target_cols if c in df.columns]
     missing = {"stock": ["post", "class", "qty", "as_of"], "consumption": ["date", "post", "class", "qty"],
                "weather": ["date", "location", "simulated"], "road_status": ["segment", "status"],
-               "airlift": ["date", "hours"]}[cfg["target"]]
+               "airlift": ["date", "hours"], "terrain": ["lat", "lon", "elev_m"],
+               "geometry": ["id", "kind", "geometry"]}[cfg["target"]]
     missing = [c for c in missing if c not in keep]
     if missing:
         raise ValueError(f"config does not provide required fields: {missing}")
     return df[keep], rejected
 
 
-def sync(only: str | None = None) -> None:
+def sync(ids: set | None = None) -> None:
+    """Load every source (or only the given ids) into the database."""
     now = datetime.now().isoformat(timespec="seconds")
     for cfg in configs():
-        if only and cfg["id"] != only:
+        if ids is not None and cfg["id"] not in ids:
             continue
         run = {"source": cfg["id"], "ts": now, "ok": 0, "records": 0, "rejected": 0,
                "last_record": None, "error": None}
@@ -80,7 +82,7 @@ def sync(only: str | None = None) -> None:
             with db.connect() as con:
                 con.execute(f"DELETE FROM {cfg['target']} WHERE source = ?", (cfg["id"],))
                 df.to_sql(cfg["target"], con, if_exists="append", index=False)
-            run.update(ok=1, records=len(df), last_record=df[cfg["time_field"]].max())
+            run.update(ok=1, records=len(df), last_record=df[cfg["time_field"]].max() if cfg.get("time_field") else None)
         except Exception as e:  # a broken source must not stop the others
             run["error"] = f"{type(e).__name__}: {e}"
         with db.connect() as con:
@@ -117,9 +119,13 @@ def status() -> list[dict]:
                         health = "warning" if health == "ok" else health
                         notes.append(f"{len(silent)} of {len(rows)} {cfg.get('key_label', 'keys')} silent > {limit} h: "
                                      + ", ".join(silent))
+        files = sorted(db.ROOT.glob(cfg["path"]))
+        simulated = cfg.get("simulated", True)
         out.append({
-            "id": cfg["id"], "name": cfg["name"], "owner": cfg.get("owner", ""),
-            "simulated": cfg.get("simulated", True), "target": cfg["target"], "health": health,
+            "id": cfg["id"], "name": cfg["name"], "owner": cfg.get("owner", ""), "simulated": simulated,
+            "label": cfg.get("label") or ("Real data" if not simulated else "Simulated for prototype"),
+            "file_time": files and datetime.fromtimestamp(max(f.stat().st_mtime for f in files)).isoformat(timespec="minutes"),
+            "target": cfg["target"], "health": health,
             "notes": notes, "last_sync": run and run["ts"], "last_record": run and run["last_record"],
             "records": run and run["records"], "file": cfg["_file"],
             "config": (db.ROOT / cfg["_file"]).read_text(encoding="utf-8"),

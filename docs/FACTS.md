@@ -74,6 +74,17 @@ Plan: download once **1990-01-01 → latest** for Leh, Kargil, Drass, Zoji La, B
 
 ---
 
+## 2b. Other real, free data used by the app (no account, no key) — added 5 Oct 2026
+
+| Source | What we use | Licence / attribution | Checked |
+|---|---|---|---|
+| [Open-Meteo Forecast API](https://open-meteo.com/en/docs) | 16-day daily forecast for the same 7 points (Live mode); cached in `data/real/forecast.csv` | CC BY 4.0, free for non-commercial use, no key | Live test 5 Oct 2026: 16 days returned with every variable we use |
+| [Open-Meteo Elevation API](https://open-meteo.com/en/docs/elevation-api) → **Copernicus DEM GLO-90** | Terrain height of every node/pass and a ~1.5 km grid over the sector; cached in `data/real/dem.csv` | Copernicus DEM © DLR / Airbus, provided under COPERNICUS by the EU and ESA | Live test: Leh 3,414 m, Zoji La 3,510 m, Baralacha La 4,820 m, Tanglang La 5,325 m (published heights 3,500 / 3,528 / ~4,890 / 5,328 m) |
+| [OpenStreetMap via Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API) | NH-1 and NH-3 road geometry (616 segments), the three real passes, Leh/Kargil/Drass; cached in `data/real/osm_features.json` | © OpenStreetMap contributors, ODbL | Overpass refuses requests without a User-Agent; we send one. No boundary data is downloaded |
+
+- Real place coordinates in `data/sector.json` now come from OSM. The fictional sites were moved (by up to ~9 km) to real terrain spots with plausible heights, keeping the drone distances the demo needs.
+- **Not used, because it needs an account:** NASA Earthdata (e.g. MODIS snow cover). Ask the team before adding it.
+
 ## 3. Logistics drone specs (public RFIs and Indian products)
 
 | Fact | Source | Conf. |

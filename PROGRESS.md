@@ -15,6 +15,12 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - Demo facts built in: Alpha kerosene ~8.7 days (sensor reading), Delta medical 3 days (track closed by snow since 23 Oct), Foxtrot rations 12 days (+20% troops since 20 Sep), Hotel's fuel sensor silent since 23 Oct 08:00. Three anomalies are injected, with ground truth in `data/anomaly_truth.json`.
   - `backend/selfcheck.py` passes. API: `/api/health`, `/api/sector`, `/api/stock`, `/api/sources`, `POST /api/sources/sync`. The frontend is still a placeholder page listing the sources.
 
+- **Real data (5 Oct 2026, time-boxed):** `backend/realdata.py` caches three real sources: Open-Meteo 16-day forecast, Copernicus DEM (via the Open-Meteo elevation API) and OSM via Overpass (needs a User-Agent). 10 sources in total; each has a `label` (Real data / Simulated — military data is classified ...).
+  - Node and pass heights in the DB come from the DEM (`gen_data` loads the real sources first, then builds the simulated world on top). The fictional sites were re-sited on real terrain.
+  - `backend/world.py`: `clock(mode)`, `weather(location, mode)`, `stock(mode)`, `consumption(mode)`. Modes: `demo` (25 Oct 2026) and `live` (today + real forecast). **All later engines must read through world.py and take `mode`.**
+  - API: `/api/health?mode=`, `/api/weather?location=&mode=`, `POST /api/live/refresh` (refreshes the forecast; 503 if offline), `/api/sector` now also returns OSM features.
+  - Known limit: Live mode after 25 Oct 2026 has no simulated military data past that date, and the real archive is cached only up to 4 Oct 2026.
+
 ## Next
 - Step 3: forecast per post per class (LightGBM quantiles vs a naive 28-day mean, held-out last 60 days), days of cover, accuracy in plain words. Add the checks to `backend/selfcheck.py`.
 
