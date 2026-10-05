@@ -22,9 +22,9 @@ NOISE = {"rations": 0.06, "kerosene": 0.10, "medical": 0.35, "batteries_spares":
 OUTLOOK_END = pd.Timestamp("2027-06-30")
 OUTLOOK_LOCS = ["sector_x", "zojila", "baralacha", "tanglang", "leh"]
 
-# Days of stock held on the demo date. Most posts are already winter-stocked;
-# three are deliberately short so the demo has a problem to solve.
-COVER_DAYS = {"PA": 225, "PB": 235, "PC": 215, "PD": 220, "PE": 240, "PF": 210, "PG": 250, "PH": 230}
+# Stock on the demo date: most items are winter-stocked (their simulated use until STOCKED_UNTIL,
+# plus a 5-20% margin); three are deliberately short (days at the recent rate) so the demo has a problem.
+STOCKED_UNTIL = "2027-06-15"
 SHORT = {("PA", "kerosene"): 9, ("PD", "medical"): 3, ("PF", "rations"): 12}
 SURGE = ("PF", "2026-09-20", 1.2)  # Foxtrot strength +20% from this date
 SILENT_SENSOR = ("PH", "2026-10-23T08:00")  # Hotel's sensor stops reporting
@@ -32,7 +32,7 @@ SILENT_SENSOR = ("PH", "2026-10-23T08:00")  # Hotel's sensor stops reporting
 ANOMALIES = [
     {"post": "PB", "class": "rations", "start": "2026-08-14", "end": "2026-08-14", "factor": 10, "kind": "data entry error"},
     {"post": "PH", "class": "kerosene", "start": "2026-09-10", "end": "2026-09-24", "factor": 1.45, "kind": "possible pilferage"},
-    {"post": "PC", "class": "medical", "start": "2026-10-10", "end": "2026-10-16", "factor": 3, "kind": "genuine surge"},
+    {"post": "PC", "class": "medical", "start": "2026-09-08", "end": "2026-09-14", "factor": 3, "kind": "genuine surge"},
 ]
 SEGMENTS = {  # simulated road bulletin; anything not listed is OPEN
     "NH1-ZOJILA": ("NH-1 Zoji La", "OPEN", "Open. Night movement suspended."),
@@ -59,7 +59,9 @@ def outlook() -> pd.DataFrame:
 
 
 def consumption(rng, wx: pd.DataFrame, posts: list[dict]) -> pd.DataFrame:
-    days = pd.date_range(P["demo"]["history_start"], LAST_DAY)
+    """Simulated daily use from history start to the end of the outlook. Only the past goes into the
+    CICG feed; the future part is used just to size the winter stock."""
+    days = pd.date_range(P["demo"]["history_start"], OUTLOOK_END)
     tmean = ((wx["tmax"] + wx["tmin"]) / 2).reindex(days).to_numpy()
     rows = []
     for n in posts:
@@ -92,14 +94,16 @@ def consumption(rng, wx: pd.DataFrame, posts: list[dict]) -> pd.DataFrame:
     return pd.concat(rows, ignore_index=True)
 
 
-def stock(rng, cons: pd.DataFrame) -> pd.DataFrame:
+def stock(rng, cons: pd.DataFrame, future: pd.DataFrame) -> pd.DataFrame:
     recent = cons[cons["ISSUE_DT"] > (LAST_DAY - pd.Timedelta(days=28)).strftime("%Y-%m-%d")]
     mean = recent.groupby(["UNIT_LOC_CODE", "ITEM_CAT"])["QTY_ISSUED"].mean()
+    winter = future[future["ISSUE_DT"] <= STOCKED_UNTIL].groupby(["UNIT_LOC_CODE", "ITEM_CAT"])["QTY_ISSUED"].sum()
     rows = []
     for (post, code), m in mean.items():
         cls = next(k for k, v in CODES.items() if v == code)
-        days = SHORT.get((post, cls)) or COVER_DAYS[post] * rng.uniform(0.95, 1.05)
-        rows.append({"UNIT_LOC_CODE": post, "ITEM_CAT": code, "QTY_HELD": round(m * days, 1),
+        short = SHORT.get((post, cls))
+        qty = m * short if short else winter[(post, code)] * rng.uniform(1.05, 1.20)
+        rows.append({"UNIT_LOC_CODE": post, "ITEM_CAT": code, "QTY_HELD": round(qty, 1),
                      "AU": P["classes"][cls]["unit"], "AS_ON_DT": AS_OF.strftime("%Y-%m-%dT%H:%M")})
     return pd.DataFrame(rows)
 
@@ -197,9 +201,11 @@ def main() -> None:
     wx.index = pd.to_datetime(wx.index)
 
     # 2) simulated military feeds
-    cons = consumption(rng, wx, posts)
+    allc = consumption(rng, wx, posts)
+    past = allc["ISSUE_DT"] <= LAST_DAY.strftime("%Y-%m-%d")
+    cons, future = allc[past], allc[~past]
     cons.to_csv(FEEDS / "cicg_issues.csv", index=False)
-    stk = stock(rng, cons)
+    stk = stock(rng, cons, future)
     stk.to_csv(FEEDS / "cicg_stock.csv", index=False)
     with open(FEEDS / "iot_fuel_sensors.jsonl", "w", encoding="utf-8") as f:
         f.writelines(json.dumps(r) + "\n" for r in iot(rng, cons, stk))

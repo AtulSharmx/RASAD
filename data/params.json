@@ -25,6 +25,9 @@
     "truck": {
       "payload_kg": {"v": 2500, "src": "PLACEHOLDER: light truck on forward roads"},
       "jeep_payload_kg": {"v": 800, "src": "PLACEHOLDER: light vehicle on jeep tracks"},
+      "jeep_speed_kmh": {"v": 10, "src": "PLACEHOLDER: jeep track average"},
+      "jeep_cost_factor": {"v": 4, "src": "PLACEHOLDER: cost per kg-km on jeep tracks compared with trucks"},
+      "drive_hours_per_day": {"v": 8, "src": "PLACEHOLDER: daylight driving hours in mountains"},
       "speed_kmh": {"v": 25, "src": "PLACEHOLDER: mountain road average"},
       "cost_inr_per_kg_km": {"v": 0.024, "src": "DERIVED: Rs 1 lakh per 10-tonne round trip Srinagar-Leh (~420 km one way), The Week 2020 (FACTS 5)"}
     },
@@ -32,6 +35,7 @@
       "payload_kg_by_alt_m": {"v": [[3500, 1000], [4500, 600], [5500, 300], [6400, 200]], "src": "PLACEHOLDER curve; the 200 kg at ~21,000 ft point is the public Dhruv requirement (FACTS 5)"},
       "cost_inr_per_hour": {"v": 533000, "src": "DERIVED: ~Rs 4 lakh per 45-min sortie, The Week 2020 (FACTS 5)"},
       "speed_kmh": {"v": 180, "src": "PLACEHOLDER"},
+      "handling_hours": {"v": 0.25, "src": "PLACEHOLDER: loading and unloading time per sortie"},
       "max_wind_kmh": {"v": 55, "src": "PLACEHOLDER"},
       "max_snowfall_cm": {"v": 2, "src": "PLACEHOLDER"},
       "max_cloud_pct": {"v": 85, "src": "PLACEHOLDER: proxy for visibility (Open-Meteo archive has no visibility)"}
@@ -72,6 +76,9 @@
   },
   "closure": {
     "confidence": {"v": 0.8, "src": "Team choice: plan on the date the route is still open with 80% probability"},
-    "loading_buffer_days": {"v": 1, "src": "PLACEHOLDER"}
+    "loading_buffer_days": {"v": 1, "src": "PLACEHOLDER"},
+    "threshold_factor": {"v": {"road": 0.8, "jeep_track": 0.5, "mule_track": 0.4}, "src": "PLACEHOLDER: forward roads and tracks are not cleared like national highways, so they close at this fraction of the fitted Manali-Leh snow threshold"},
+    "snow_per_1000m": {"v": 0.3, "src": "PLACEHOLDER: extra snowfall share per 1,000 m above 4,000 m"},
+    "track_reopen_lag_days": {"v": 30, "src": "PLACEHOLDER: forward roads and tracks reopen this long after the Manali-Leh highway"}
   }
 }

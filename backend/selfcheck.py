@@ -1,7 +1,7 @@
 """Quick check of the core logic. Run after gen_data: python -m backend.selfcheck"""
 import pandas as pd
 
-from backend import adapters, db, forecast, world
+from backend import adapters, closure, db, forecast, world
 
 
 def check_adapters():
@@ -58,9 +58,26 @@ def check_forecast():
     assert len(forecast.run("live")["cover"]) == 40
 
 
+def check_pnr():
+    r = closure.run("demo")
+    for a in r["axes"]:
+        assert a["rule"]["loo_error_days"] < 25, a["rule"]
+    assert "2026-11-01" <= r["axes"][1]["closure_p50"] <= "2026-11-30", "Manali-Leh usually closes in November"
+    items = {(i["post"], i["class"]): i for i in r["items"]}
+    pa = items[("PA", "kerosene")]
+    assert pa["status"] == "urgent" and 0 <= pa["days_left"] <= 7 and pa["cost_multiple"] > 1, pa
+    assert items[("PD", "medical")]["status"] == "passed", "Delta's track is closed: air only"
+    assert items[("PF", "rations")]["status"] in ("urgent", "passed")
+    assert sorted({i["post"] for i in r["items"] if i["status"] != "stocked"}) == ["PA", "PD", "PF"]
+    for c in r["curves"].values():
+        p = [x["p_closed"] for x in c]
+        assert p == sorted(p), "closure probability can only grow with time"
+
+
 if __name__ == "__main__":
     check_adapters()
     check_forecast()
     check_real_data()
     check_demo_story()
+    check_pnr()
     print("selfcheck OK")
