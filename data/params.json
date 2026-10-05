@@ -1,0 +1,73 @@
+{
+  "_note": "Every number has a source tag: FACTS = public source (see docs/FACTS.md), DERIVED = calculated from public figures, PLACEHOLDER = made up for the prototype (listed in docs/PLACEHOLDERS.md).",
+  "demo": {
+    "now": "2026-10-25T06:00",
+    "seed": 42,
+    "history_start": "2024-10-01",
+    "analog_year": {"v": 2021, "src": "Weather after the last real day is copied from this past year (same dates) and labelled simulated"}
+  },
+  "classes": {
+    "rations": {"label": "Rations", "unit": "kg", "kg_per_unit": 1.0, "priority": 2,
+      "per_man_day": {"v": 1.3, "src": "PLACEHOLDER: ration weight incl. packing, kg per man per day"},
+      "cold_factor_per_degC_below_0": {"v": 0.004, "src": "PLACEHOLDER"}},
+    "kerosene": {"label": "Kerosene / fuel", "unit": "L", "kg_per_unit": 0.8, "priority": 2,
+      "per_man_day": {"v": 1.0, "src": "PLACEHOLDER: litres per man per day at +10 C"},
+      "extra_per_degC_below_10": {"v": 0.12, "src": "PLACEHOLDER: extra litres per man per day for each degree below +10 C (heating)"}},
+    "medical": {"label": "Medical", "unit": "kg", "kg_per_unit": 1.0, "priority": 1,
+      "per_man_day": {"v": 0.03, "src": "PLACEHOLDER"}},
+    "batteries_spares": {"label": "Batteries / spares", "unit": "kg", "kg_per_unit": 1.0, "priority": 3,
+      "per_man_day": {"v": 0.15, "src": "PLACEHOLDER"},
+      "cold_factor_per_degC_below_0": {"v": 0.01, "src": "PLACEHOLDER: batteries drain faster in cold"}},
+    "winter_clothing": {"label": "Winter clothing", "unit": "kg", "kg_per_unit": 1.0, "priority": 3,
+      "per_man_day": {"v": 0.05, "src": "PLACEHOLDER: replacement rate"}}
+  },
+  "modes": {
+    "truck": {
+      "payload_kg": {"v": 2500, "src": "PLACEHOLDER: light truck on forward roads"},
+      "jeep_payload_kg": {"v": 800, "src": "PLACEHOLDER: light vehicle on jeep tracks"},
+      "speed_kmh": {"v": 25, "src": "PLACEHOLDER: mountain road average"},
+      "cost_inr_per_kg_km": {"v": 0.024, "src": "DERIVED: Rs 1 lakh per 10-tonne round trip Srinagar-Leh (~420 km one way), The Week 2020 (FACTS 5)"}
+    },
+    "helicopter": {
+      "payload_kg_by_alt_m": {"v": [[3500, 1000], [4500, 600], [5500, 300], [6400, 200]], "src": "PLACEHOLDER curve; the 200 kg at ~21,000 ft point is the public Dhruv requirement (FACTS 5)"},
+      "cost_inr_per_hour": {"v": 533000, "src": "DERIVED: ~Rs 4 lakh per 45-min sortie, The Week 2020 (FACTS 5)"},
+      "speed_kmh": {"v": 180, "src": "PLACEHOLDER"},
+      "max_wind_kmh": {"v": 55, "src": "PLACEHOLDER"},
+      "max_snowfall_cm": {"v": 2, "src": "PLACEHOLDER"},
+      "max_cloud_pct": {"v": 85, "src": "PLACEHOLDER: proxy for visibility (Open-Meteo archive has no visibility)"}
+    },
+    "drone": {
+      "payload_kg_by_band": {"v": {"up_to_6000ft": 20, "6000_12000ft": 20, "12000_20000ft": 15}, "src": "FACTS 3: 15 kg high altitude / 20 kg medium altitude, Army RFP (Tribune, Oct 2022). No separate public figure below 6,000 ft, so the medium figure is used"},
+      "range_km_one_way": {"v": 10, "src": "FACTS 3: lowest public figure (RFIs say 10-20 km)"},
+      "speed_kmh": {"v": 50, "src": "FACTS 3: Sabal 20"},
+      "endurance_min": {"v": 40, "src": "FACTS 3: Sabal 20"},
+      "cost_inr_per_sortie": {"v": 1500, "src": "PLACEHOLDER: battery, wear and crew time"},
+      "max_wind_kmh": {"v": 35, "src": "PLACEHOLDER: no public wind limit found"},
+      "max_snowfall_cm": {"v": 1, "src": "PLACEHOLDER"}
+    },
+    "mule": {
+      "payload_kg": {"v": 40, "src": "FACTS 4: lower public figure (40-72.5 kg reported)"},
+      "speed_kmh": {"v": 2.5, "src": "PLACEHOLDER"},
+      "cost_inr_per_trip_km": {"v": 150, "src": "PLACEHOLDER"},
+      "max_snow_depth_m": {"v": 0.6, "src": "PLACEHOLDER: track usable below this snow depth"}
+    },
+    "porter": {
+      "payload_kg": {"v": 20, "src": "FACTS 4: middle of the 10-30 kg range"},
+      "speed_kmh": {"v": 2.0, "src": "PLACEHOLDER"},
+      "cost_inr_per_trip_km": {"v": 100, "src": "PLACEHOLDER"},
+      "max_snow_depth_m": {"v": 0.9, "src": "PLACEHOLDER"}
+    }
+  },
+  "fleet": {
+    "helicopters": {"v": 2, "src": "PLACEHOLDER: utility helicopters available to Sector X"},
+    "heli_hours_per_day": {"v": 6, "src": "PLACEHOLDER: total flying hours per day for the sector"},
+    "drones_at": {"v": {"RH-L": 4}, "src": "PLACEHOLDER: drones already held"},
+    "mules_at": {"v": {"RH-K": 20, "RH-L": 20}, "src": "PLACEHOLDER"},
+    "porters_at": {"v": {"RH-K": 15, "RH-L": 15}, "src": "PLACEHOLDER"},
+    "trucks": {"v": 10, "src": "PLACEHOLDER"}
+  },
+  "closure": {
+    "confidence": {"v": 0.8, "src": "Team choice: plan on the date the route is still open with 80% probability"},
+    "loading_buffer_days": {"v": 1, "src": "PLACEHOLDER"}
+  }
+}

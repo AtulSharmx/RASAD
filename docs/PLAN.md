@@ -27,7 +27,8 @@ RASAD/
   data/
     fleet.json      payload/range/cost/weather limits per mode, each tagged SOURCE or PLACEHOLDER
     sector.geojson  offline basemap (roads, passes, tracks, rivers)
-    feeds/          simulated CICP-like inventory, BRO road status, IAF airlift schedule
+    feeds/          simulated CICG-like inventory + issues, IoT fuel-tank sensors (reading every 4 h),
+                    BRO-like road status, IAF-like airlift schedule
     weather/        cached real Open-Meteo data
     rasad.db        SQLite (generated)
   frontend/         React + Vite + TS + Leaflet
@@ -93,5 +94,11 @@ Simulated date **25 Oct 2026**, "Sector X (fictional)". Rear nodes: Leh (main de
 
 `PROGRESS.md` is updated and a git commit is made after every step.
 
-## 8. Skipped on purpose
+## 8. Changes agreed on 5 Oct 2026
+- Drone payload: **15 kg** for 12,000–20,000 ft and **20 kg** for 6,000–12,000 ft; range 10 km (Tribune, Oct 2022 RFP).
+- **IoT is part of the base, not SHOULD:** simulated fuel-tank level sensors at posts, one reading every 4 h. It is a normal source adapter, shown on the Sources page, and it updates kerosene stock. The QM QR page stays in SHOULD.
+- Army system named **CICG** (Joint Primer, Aug 2025).
+- Private GitHub repo `RASAD`; push after every step.
+
+## 9. Skipped on purpose
 No Docker, Postgres, Redis, Celery or real auth. Configs are JSON (no YAML library needed). No truck *routing* (VRP): the problem here is *which mode*, not *which street*.

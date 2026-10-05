@@ -1,0 +1,13 @@
+{
+  "id": "cicg_stock",
+  "name": "Inventory holdings (CICG-like export)",
+  "owner": "Army inventory system - daily export",
+  "simulated": true,
+  "target": "stock",
+  "format": "csv",
+  "path": "data/feeds/cicg_stock.csv",
+  "map": {"post": "UNIT_LOC_CODE", "class": "ITEM_CAT", "qty": "QTY_HELD", "unit": "AU", "as_of": "AS_ON_DT"},
+  "value_map": {"class": {"RAT": "rations", "SKO": "kerosene", "MED": "medical", "BAT": "batteries_spares", "WCL": "winter_clothing"}},
+  "time_field": "as_of",
+  "stale_after_hours": 36
+}

@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+data/rasad.db
+frontend/node_modules/
+frontend/dist/

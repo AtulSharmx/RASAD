@@ -1,0 +1,11 @@
+{
+  "id": "iaf_airlift",
+  "name": "Helicopter airlift allotment (IAF-like schedule)",
+  "owner": "Air effort allotted to the sector",
+  "simulated": true,
+  "target": "airlift",
+  "format": "csv",
+  "path": "data/feeds/iaf_airlift.csv",
+  "map": {"date": "SORTIE_DATE", "sortie": "SORTIE_ID", "aircraft": "AC_TYPE", "base": "BASE", "hours": "HRS_ALLOTTED", "tasked_to": "TASKED_TO"},
+  "time_field": "date"
+}
