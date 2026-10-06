@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { CalendarClock, Database, GitCompareArrows, Map as MapIcon, MountainSnow, Presentation, Route, ScrollText } from 'lucide-react'
+import { CalendarClock, Database, GitCompareArrows, Map as MapIcon, MountainSnow, Presentation, Route, ScrollText, TriangleAlert } from 'lucide-react'
 import { day, useApi, type Mode, type Row } from './api'
 import { Chip, Drone } from './ui'
 import GuidedDemo from './GuidedDemo'
@@ -11,6 +11,7 @@ import Drones from './screens/Drones'
 import WhatIf from './screens/WhatIf'
 import Sources from './screens/Sources'
 import Audit from './screens/Audit'
+import Alerts from './screens/Alerts'
 
 export type Role = 'Commander' | 'Logistics Officer' | 'Post QM'
 type Ctx = { mode: Mode; setMode: (m: Mode) => void; role: Role; setRole: (r: Role) => void; route: string[]; go: (path: string) => void }
@@ -20,7 +21,7 @@ export const useApp = () => useContext(AppCtx)
 const NAV = [
   ['dashboard', 'Dashboard', MapIcon], ['post', 'Posts', MountainSnow], ['pnr', 'Point of no return', CalendarClock],
   ['plan', 'Plan', Route], ['drones', 'Drones', Drone], ['whatif', 'What-if', GitCompareArrows],
-  ['sources', 'Sources', Database], ['audit', 'Audit log', ScrollText],
+  ['alerts', 'Alerts', TriangleAlert], ['sources', 'Sources', Database], ['audit', 'Audit log', ScrollText],
 ] as const
 
 const parse = () => (location.hash.replace(/^#\/?/, '').replace(/\?.*$/, '') || 'dashboard').split('/')
@@ -41,7 +42,7 @@ export default function App() {
   const pnr = useApi(`pnr?mode=${mode}`, true)
   const sources = useApi<Row[]>('sources')
 
-  const screen = { dashboard: Dashboard, post: PostDetail, pnr: Pnr, plan: Plan, drones: Drones, whatif: WhatIf, sources: Sources, audit: Audit }[route[0]] ?? Dashboard
+  const screen = { dashboard: Dashboard, post: PostDetail, pnr: Pnr, plan: Plan, drones: Drones, whatif: WhatIf, alerts: Alerts, sources: Sources, audit: Audit }[route[0]] ?? Dashboard
   const Screen = screen
   const axes = pnr.data?.axes as Row[] | undefined
   const warn = sources.data?.filter((s) => s.health !== 'ok').length ?? 0

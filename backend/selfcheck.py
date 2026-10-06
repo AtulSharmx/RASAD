@@ -1,7 +1,9 @@
 """Quick check of the core logic. Run after gen_data: python -m backend.selfcheck"""
 import pandas as pd
 
-from backend import adapters, closure, costs, db, drones, forecast, planner, scenarios, world
+import json
+
+from backend import adapters, anomaly, closure, costs, db, drones, forecast, planner, scenarios, world
 
 
 def check_adapters():
@@ -121,6 +123,17 @@ def check_step6():
     assert runs["drones"]["after"]["cost_inr"] < runs["drones"]["before"]["cost_inr"]
 
 
+def check_alerts():
+    found = {(a["post"], a["class"]): a for a in anomaly.run("demo")}
+    kinds = {"data entry error": "data error", "possible pilferage": "steady excess", "genuine surge": "sharp surge"}
+    for t in json.loads((db.ROOT / "data" / "anomaly_truth.json").read_text()):
+        a = found.get((t["post"], t["class"]))
+        assert a and a["kind"] == kinds[t["kind"]] and a["start"] <= t["end"] and a["end"] >= t["start"], (t, a)
+    assert found[("PH", "kerosene")]["kind"] in ("silent sensor", "steady excess")
+    assert any(a["kind"] == "silent sensor" and a["post"] == "PH" for a in anomaly.run("demo")), "Hotel's silent sensor"
+    assert len(anomaly.run("demo")) <= 6, "few false alarms"
+
+
 if __name__ == "__main__":
     check_adapters()
     check_forecast()
@@ -129,4 +142,5 @@ if __name__ == "__main__":
     check_pnr()
     check_plan()
     check_step6()
+    check_alerts()
     print("selfcheck OK")

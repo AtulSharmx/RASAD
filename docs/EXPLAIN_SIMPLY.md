@@ -78,6 +78,16 @@ Army 2,715 drones kharidne ki RFI laayi hai. Sawal hai ki drones kahan rakhein. 
 
 Ek click mein: "pass 10 din pehle band ho jaye", "blizzard 3 din helicopter rok de", "Alpha–Charlie mein 20% zyada troops", "20 drones aa jayein". RASAD sab dobara calculate karke pehle aur baad dikhata hai, aur badle hue khaane peele ho jaate hain.
 
+## 8b. Data alerts (ajeeb khapat)
+
+Model batata hai ki mausam, oonchai aur mausam-ke-din ke hisaab se roz kitni khapat **honi chahiye**. Asli khapat usse bahut zyada ho to alert aata hai:
+- **Ek din bahut zyada, phir normal** → shayad data galat bhara gaya. Demo: Bravo ration, 14 Aug, 10.5×.
+- **Kai din thoda zyada** (jo thand se samajh nahi aata) → shayad leak ya chori. Demo: Hotel kerosene, 15 din, 1.37×, +684 L.
+- **Kai din bahut zyada** → shayad asli zaroorat (jaise altitude sickness). Demo: Charlie dawai, 3.1×.
+- **Sensor chup** → Hotel ka fuel sensor 46 ghante se chup hai; RASAD inventory ka number use karta hai.
+
+Har item ki apni "roz ki ghata-badhi" hoti hai (dawai zyada uchhalti hai, ration kam), isliye seema usi hisaab se tay hoti hai. Isse galat alarm nahi aate: demo data mein jaan-boojh kar daali gayi teeno anomalies pakdi gayi aur ek bhi galat alarm nahi aaya. Alert sirf ek sawal hai, ilzaam nahi.
+
 ## 9. Commander ka faisla aur audit log
 
 Har plan line par Approve / Modify / Reject hai. Approve aur reject sirf Commander kar sakta hai; modify Commander ya Logistics Officer; Post QM sirf dekh sakta hai. Har faisla (kisne, kab, pehle kya tha, baad mein kya) audit log mein jaata hai.
@@ -175,6 +185,10 @@ Drones ek asli tareeke ki tarah (RFI payload, battery, zameen), drone basing adv
 **21. Can it handle a real sector with many more posts?**
 Haan. Solver chhote problem ko second mein hal karta hai; zyada posts par bhi kuch seconds. Asli data adapters se aayega.
 *Bolne ke liye:* "The planner solves this week in seconds; a bigger sector adds seconds, not hours."
+
+**23. Can it catch pilferage or wrong entries?**
+Haan, ek pehli jaanch ke roop mein. Jo khapat mausam se samajh nahi aati, wo alert banti hai: ek din ki chhalaang = shayad galat entry; kai din thodi zyada = shayad leak ya chori; kai din bahut zyada = shayad asli zaroorat. Ye sirf sawal hai, faisla insaan karta hai.
+*Bolne ke liye:* "It flags use that the weather cannot explain: a one-day spike as a likely entry error, a steady excess as a possible leak or pilferage, and a surge to confirm with the post. Each alert is a question, not an accusation."
 
 **22. What does PLACEHOLDER mean?**
 Wo numbers jo hume public source mein nahi mile, jaise kharcha, mule ki ginti, battery. App mein peele chips se dikhte hain aur `docs/PLACEHOLDERS.md` mein list hain. User unit asli numbers dalegi.

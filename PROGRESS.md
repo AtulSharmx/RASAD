@@ -106,6 +106,11 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
     - `reset_demo.bat` while running → refused; after stopping → reset in ~4 s; `start.bat` again → audit empty, all 8 plan lines pending.
     - Double `start.bat` → just opens the browser. Live mode offline → works from the cached forecast (11 s).
 
+- **Step 9 (6 Oct 2026, lean): data alerts** in `backend/anomaly.py`, `/api/alerts`, an Alerts screen (nav item and a dashboard link).
+  - Expected use per person = LightGBM median model (weather, height, season, post). r = log(actual/expected); noise = robust MAD per series.
+  - One-day spike (> 5 noise widths and ≥ 3×) → likely data error. A 7-day median ≥ 2 noise widths and ≥ 1.2× → steady excess (< 2×, possible leak/pilferage) or sharp surge (≥ 2×, confirm with the post). Silent IoT sensors come from the adapter health.
+  - Result on demo data: exactly the 3 injected anomalies (Bravo rations data error, Hotel kerosene steady excess 1.37×, Charlie medical surge 3.1×) plus Hotel's silent sensor, and no false alarms. The self-check verifies this against `data/anomaly_truth.json`. The QM QR page was skipped (as agreed).
+
 ## Known limits (say these honestly)
 - **Roles are demo-only.** The brief asks for demo roles with no real login, so `role` and `user` come from the request (the role picker). Anyone who can reach the API can claim "Commander". Mitigations: the server listens only on 127.0.0.1, and FastAPI parses only JSON bodies, which blocks simple cross-site form posts. Production would take the identity from Army SSO/PKI and map roles on the server. An automated security review flagged this on 5 Oct; it was acknowledged and documented, not fixed (by design for the demo).
 
@@ -113,7 +118,7 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
 - Live mode recomputes everything on first use (~30–60 s); Demo mode is pre-computed at server start.
 
 ## Next
-- Step 9 (only if usage is left, lean): consumption anomaly alerts, including the silent IoT sensor at Post Hotel. Ground truth: `data/anomaly_truth.json` (PB rations ×10 on 14 Aug = data error; PH kerosene ×1.45 on 10–24 Sep = possible pilferage; PC medical ×3 on 8–14 Sep = genuine surge). Skip the QM QR page.
+- Nothing required. Optional: rehearse with `docs/DEMO_SCRIPT.md`; add screenshots to the PPT from `screenshots/`.
 
 ## How to run
 - Double-click `start.bat` (the first run sets things up) and open http://localhost:8000. `reset_demo.bat` rebuilds the demo data.
