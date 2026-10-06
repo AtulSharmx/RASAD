@@ -182,6 +182,15 @@ def sync():
     return adapters.status()
 
 
+@app.middleware("http")
+async def fresh_page(request, call_next):
+    """The page itself is never cached, so a rebuilt UI shows at once; hashed /assets files may be."""
+    resp = await call_next(request)
+    if not request.url.path.startswith(("/api/", "/assets/")):
+        resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
 dist = db.ROOT / "frontend" / "dist"
 if dist.exists():  # must be last: serves the React app for every other path
     app.mount("/", StaticFiles(directory=dist, html=True), name="web")
