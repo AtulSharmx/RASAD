@@ -118,7 +118,10 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
 - Live mode recomputes everything on first use (~30–60 s); Demo mode is pre-computed at server start.
 
 ## Next
-- Nothing required. Optional: rehearse with `docs/DEMO_SCRIPT.md`; add screenshots to the PPT from `screenshots/`.
+- **CLAUDE.md added (6 Oct 2026):** standing rules for Claude (UI/UX, clean modular code, plan before editing, no guessing, project safety rules).
+- **Fix 1: cold-start pile-up (critical).** On a fresh start, every page load asks the server for `/api/pnr`. The server then computes the same ~12 s closure result again for each request, in parallel with the warm-up, so a few reloads make it slower and slower. Tested: >120 s with a blank dashboard. Fix: let duplicate requests wait for the first calculation, and warm up `/api/pnr` first.
+- **Fix 2: map hides the top risk post at 1280×720.** At 1280×720 (a common projector size), Post Delta (#1 risk) is off the map, and at 1366×768 it is half cut off. The map crops the terrain to fill the frame. Fix: frame the map so that every post stays visible.
+- Optional: rehearse with `docs/DEMO_SCRIPT.md`; add screenshots to the PPT from `screenshots/`.
 
 ## How to run
 - Double-click `start.bat` (the first run sets things up) and open http://localhost:8000. `reset_demo.bat` rebuilds the demo data.
