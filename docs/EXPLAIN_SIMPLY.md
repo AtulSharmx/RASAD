@@ -186,11 +186,11 @@ Drones ek asli tareeke ki tarah (RFI payload, battery, zameen), drone basing adv
 Haan. Solver chhote problem ko second mein hal karta hai; zyada posts par bhi kuch seconds. Asli data adapters se aayega.
 *Bolne ke liye:* "The planner solves this week in seconds; a bigger sector adds seconds, not hours."
 
-**23. Can it catch pilferage or wrong entries?**
+**22. Can it catch pilferage or wrong entries?**
 Haan, ek pehli jaanch ke roop mein. Jo khapat mausam se samajh nahi aati, wo alert banti hai: ek din ki chhalaang = shayad galat entry; kai din thodi zyada = shayad leak ya chori; kai din bahut zyada = shayad asli zaroorat. Ye sirf sawal hai, faisla insaan karta hai.
 *Bolne ke liye:* "It flags use that the weather cannot explain: a one-day spike as a likely entry error, a steady excess as a possible leak or pilferage, and a surge to confirm with the post. Each alert is a question, not an accusation."
 
-**22. What does PLACEHOLDER mean?**
+**23. What does PLACEHOLDER mean?**
 Wo numbers jo hume public source mein nahi mile, jaise kharcha, mule ki ginti, battery. App mein peele chips se dikhte hain aur `docs/PLACEHOLDERS.md` mein list hain. User unit asli numbers dalegi.
 *Bolne ke liye:* "Numbers without a public source are tagged as placeholders, on screen and in a list, for the user unit to replace."
 
