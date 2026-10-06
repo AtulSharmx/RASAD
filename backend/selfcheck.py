@@ -2,8 +2,10 @@
 import pandas as pd
 
 import json
+import time
+from concurrent.futures import ThreadPoolExecutor
 
-from backend import adapters, anomaly, closure, costs, db, drones, forecast, planner, scenarios, world
+from backend import adapters, anomaly, cache, closure, costs, db, drones, forecast, planner, scenarios, world
 
 
 def check_adapters():
@@ -136,6 +138,21 @@ def check_alerts():
         assert a["plain"].startswith("Possible ") and "verify on ground" in a["plain"], a["plain"]
 
 
+def check_cache():
+    """Callers asking for the same result at the same time share one calculation (no pile-up on reloads)."""
+    calls = []
+
+    @cache.memo(maxsize=2)
+    def slow(x):
+        calls.append(x)
+        time.sleep(0.2)
+        return x * 2
+
+    with ThreadPoolExecutor(4) as ex:
+        assert list(ex.map(slow, [1, 1, 1, 1])) == [2, 2, 2, 2]
+    assert calls == [1], calls
+
+
 if __name__ == "__main__":
     check_adapters()
     check_forecast()
@@ -145,4 +162,5 @@ if __name__ == "__main__":
     check_plan()
     check_step6()
     check_alerts()
+    check_cache()
     print("selfcheck OK")

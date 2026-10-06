@@ -6,13 +6,12 @@ troop strength gives the post's demand, so a troop change flows straight into th
 Honesty check: on the last 60 days the model never saw, against the naive "28-day average". For each class
 the better of the two is used, and its band is calibrated so it really holds ~80% of real days.
 """
-import functools
 
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
-from backend import db, world
+from backend import cache, db, world
 
 QUANTILES = (0.1, 0.5, 0.9)
 WINDOW, NAIVE_DAYS = 60, 28  # hold-out and calibration windows; naive look-back (days)
@@ -88,7 +87,7 @@ def _calibrate(p: np.ndarray, y: np.ndarray) -> float:
     return 6.0
 
 
-@functools.lru_cache(maxsize=4)
+@cache.memo(maxsize=4)
 def evaluate(mode: str = "demo") -> tuple[pd.DataFrame, dict]:
     """Two windows, no leak:
     - SELECT window (the 60 days before the final 60): pick the method per class and set its band factor.
@@ -174,7 +173,7 @@ def cover(mode: str, fc: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-@functools.lru_cache(maxsize=4)
+@cache.memo(maxsize=4)
 def run(mode: str = "demo") -> dict:
     """Everything the screens need; cached until the data changes (then call clear())."""
     fc = forecast(mode)

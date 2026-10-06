@@ -15,6 +15,7 @@ from backend import adapters, anomaly, closure, costs, db, drones, forecast, pla
 def warm_up() -> None:
     """Pre-compute the demo results in the background so the screens open instantly."""
     try:
+        closure.run("demo")  # first: the dashboard's risk posts need it (requests arriving meanwhile wait for it)
         planner.run("demo")
         scenarios.all_runs("demo")
     except Exception as e:  # never block start-up; the endpoints will show the error

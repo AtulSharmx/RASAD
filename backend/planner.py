@@ -9,7 +9,6 @@ urgent loads first. Hard rules:
 - fleet sizes per roadhead (mules, porters, jeeps, trucks, drones).
 Every line gets a plain reason, its cost and the assumptions behind it (with PLACEHOLDER tags).
 """
-import functools
 import json
 import math
 
@@ -17,7 +16,7 @@ import numpy as np
 import pandas as pd
 from ortools.sat.python import cp_model
 
-from backend import closure, costs, db, forecast, world
+from backend import cache, closure, costs, db, forecast, world
 
 P = db.PARAMS
 M, F, PL = P["modes"], P["fleet"], P["planner"]
@@ -301,7 +300,7 @@ def _line(mode, ld, kind, src, kg, trips, cost_inr, ds, o, nodes, sched=()) -> d
             "priority": "urgent" if ld["status"] in ("passed", "urgent") else "normal"}
 
 
-@functools.lru_cache(maxsize=4)
+@cache.memo(maxsize=4)
 def run(mode: str = "demo") -> dict:
     """The solved plan for a mode (cached; decisions are attached fresh by with_decisions)."""
     return plan(mode)

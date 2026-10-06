@@ -8,14 +8,13 @@ this winter is like 1995, 1996, ... 2025, when does each route close?". That giv
 distribution. The last safe dispatch is the date on which the route is still open with 80% probability,
 minus transit and loading time.
 """
-import functools
 import json
 import math
 
 import numpy as np
 import pandas as pd
 
-from backend import costs, db, forecast, world
+from backend import cache, costs, db, forecast, world
 
 CLOSURES = json.loads((db.ROOT / "data" / "closures.json").read_text(encoding="utf-8"))
 P, CP = db.PARAMS, db.PARAMS["closure"]
@@ -69,7 +68,7 @@ def _closing_day(x: np.ndarray, c: float, d: float, t: float, start: int = 0) ->
     return int(_first(((cum >= c) & (storm >= d)) | (t7 <= t), start))
 
 
-@functools.lru_cache(maxsize=4)
+@cache.memo(maxsize=4)
 def fit(pass_id: str) -> dict:
     """Best (C, D, T) on the real closure dates, plus a leave-one-winter-out error so we don't fool ourselves."""
     info = CLOSURES[pass_id]
@@ -186,7 +185,7 @@ def _air(post: dict, nodes: dict) -> dict:
     return {"pad": pad["name"], "payload_kg": round(payload), "sortie_hours": round(hours, 2), "inr_per_kg": per_kg}
 
 
-@functools.lru_cache(maxsize=8)
+@cache.memo(maxsize=8)
 def run(mode: str = "demo", shift: int = 0, strength: tuple = ()) -> dict:
     """shift: what-if closure shift in days (e.g. -10). strength: what-if ((post, factor), ...)."""
     now = world.clock(mode).normalize()
