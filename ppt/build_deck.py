@@ -173,17 +173,10 @@ ids.remove(last)
 for s in (s2, s3, s4, s5, s6):  # the "Your Team Name" oval: our name, at a size that fits inside it
     oval = next(sh for sh in s.shapes if sh.name.startswith("Oval"))
     run = set_runs(oval.text_frame.paragraphs[0], TEAM_NAME or "Your Team Name")
-    run.font.size, run.font.bold = Pt(11.5), bool(TEAM_NAME)
+    run.font.size, run.font.bold = Pt(12), bool(TEAM_NAME)
     oval.text_frame.margin_left = oval.text_frame.margin_right = Inches(0)  # keeps the name on one line
-    for p in oval.text_frame.paragraphs[1:]:
+    for p in oval.text_frame.paragraphs[1:]:  # name only here; the Team ID is on slide 1
         p._p.getparent().remove(p._p)
-    if TEAM_ID:
-        p = oval.text_frame.add_paragraph()
-        p.alignment = PP_ALIGN.CENTER
-        r = p.add_run()
-        r.text = "ID " + TEAM_ID
-        r.font.size = Pt(10.5)
-        r.font.color.rgb = RGBColor(0x40, 0x40, 0x40)
 
 # ----- Slide 1: TITLE PAGE -----
 sub = get(s1, "Subtitle 3")
