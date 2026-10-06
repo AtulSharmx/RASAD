@@ -138,6 +138,8 @@ button, select, input { font: inherit; color: inherit; }
 .leaflet-container { font: inherit; background: #f2f3ee; outline: none; }
 .mlabel { font: 700 1rem/1 var(--cond); color: var(--ink); white-space: nowrap; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 4px #fff; }
 .mlabel small { font: 500 .82rem var(--text); color: var(--ink-2); }
+.mlabel.west { width: max-content; transform: translateX(-100%); }
+.mlabel.north { width: max-content; transform: translateX(-50%); }
 .mpass { font: italic 600 .88rem var(--text); color: #6b3d16; white-space: nowrap; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
 .ring { width: 2.9rem; height: 2.9rem; border: 3px solid var(--urgent); border-radius: 50%; position: relative; }
 .ring b { position: absolute; right: -.75rem; top: -.75rem; }

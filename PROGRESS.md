@@ -127,9 +127,10 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - The problem: at 1280×720 the map hid Post Delta (#1 risk), and at 1366×768 Delta and Hotel were half cut off.
   - The fix: the map now fits all posts, with room for labels and controls, and refits when the screen size changes. It never pans past the terrain edge.
   - Checked at 1024×768, 1280×720, 1366×768 and 1920×1080. Screenshots 01, 10 and 11 were recaptured.
-- Small leftovers (optional):
-  - At 1366×768 the Hotel label touches the track to Roadhead Lima.
-  - In guided-demo moment 1 at 1366×768, the popover covers Post Foxtrot on the map.
+- **Fixed (6 Oct 2026): map labels and the guided-demo card.**
+  - Guided-demo moment 1: the card now sits in the map's empty north-east (`cardIn: 'map'`), so Delta, Foxtrot and Alpha all stay visible at 1366×768 and 1920×1080.
+  - A post whose track leaves eastwards gets its label on the west side (Golf, Charlie). The westernmost post (Hotel) has no room there, so its label sits above the marker.
+- **CODE FREEZE (6 Oct 2026): no new features.** From here on, only demo rehearsal and bug fixes.
 - Optional: rehearse with `docs/DEMO_SCRIPT.md`; add screenshots to the PPT from `screenshots/`.
 
 ## How to run
