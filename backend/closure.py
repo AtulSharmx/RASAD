@@ -128,7 +128,8 @@ def _members(location: str, mode: str, snow_scale: float, t_shift: float) -> tup
 
 def segment(seg_id: str, mode: str, days_shift: int = 0) -> dict:
     """Closure-day distribution (one value per past winter) for a real axis or a forward link."""
-    status = {r["segment"]: r["status"] for r in db.query("SELECT segment, status FROM road_status")}
+    bulletin = {r["segment"]: r for r in db.query("SELECT segment, status, reason FROM road_status")}
+    status = {k: r["status"] for k, r in bulletin.items()}
     if seg_id in ("NH1-ZOJILA", "NH3-BARALACHA"):
         pid = seg_id.split("-")[1]
         f, loc, scale, shift, kind = fit(pid), CLOSURES[pid]["weather"], 1.0, 0.0, "highway"
@@ -154,7 +155,7 @@ def segment(seg_id: str, mode: str, days_shift: int = 0) -> dict:
         days = np.array([_closing_day(m, f["C_cm"], f["D_cm"], t, today) for m in mem])
         days = np.maximum(days + days_shift, today)  # what-if: everything closes `days_shift` days earlier/later
     return {"id": seg_id, "kind": kind, "status": status.get(seg_id, "open"), "today": today,
-            "days": days, "reopen_day": reopen}
+            "days": days, "reopen_day": reopen, "reason": (bulletin.get(seg_id) or {}).get("reason") or ""}
 
 
 def _dist_km(a: dict, b: dict) -> float:
@@ -204,6 +205,8 @@ def run(mode: str = "demo", shift: int = 0, strength: tuple = ()) -> dict:
         for l in route:
             segs.setdefault(l["id"], segment(l["id"], mode, shift))
         close = np.min([segs[l["id"]]["days"] for l in route], axis=0)
+        closed = [segs[l["id"]] for l in route if segs[l["id"]]["status"] == "closed"]  # per the road bulletin
+        route_note = closed[0]["reason"] if closed else ""
         reopen = max(segs[l["id"]]["reopen_day"] for l in route)
         today = segs[route[0]["id"]]["today"]
         km = {m: sum(l["km"] for l in route if l["mode"] == m) for m in ("road", "jeep_track", "mule_track")}
@@ -236,7 +239,9 @@ def run(mode: str = "demo", shift: int = 0, strength: tuple = ()) -> dict:
                 headline = (f"{name}: forecast gap of {short:,.0f} {c['unit']} (~{short_days:.0f} days of use) is "
                             f"within the {CP['margin_days']['v']}-day forecast margin; review at the next update.")
             elif status == "passed":
-                headline = (f"{name}: the ground route is already closed or will close before a convoy arrives. "
+                why = (f"the ground route is closed ({route_note.rstrip('.')})" if closed
+                       else "the ground route will close before a convoy can arrive")
+                headline = (f"{name}: {why}. "
                             f"Air maintenance needed now, ~{multiple:.0f}x the road cost "
                             f"({costs.basis(road_per_kg, air['inr_per_kg'])}).")
             else:
@@ -246,6 +251,7 @@ def run(mode: str = "demo", shift: int = 0, strength: tuple = ()) -> dict:
             items.append({
                 "post": post, "post_name": nodes[post]["name"], "class": cls, "label": c["label"], "unit": c["unit"],
                 "status": status, "headline": headline, "dispatch_by": by, "route": [l["id"] for l in route][::-1],
+                "route_closed": bool(closed), "route_note": route_note,
                 "last_safe_dispatch": date(last_safe), "days_left": days_left, "transit_days": transit,
                 "closure_p20": date(np.percentile(close, 20, method="lower")),
                 "closure_p50": date(np.percentile(close, 50, method="lower")),

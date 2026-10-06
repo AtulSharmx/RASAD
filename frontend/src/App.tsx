@@ -76,7 +76,7 @@ export default function App() {
           {axes && <>
             <span><b>Manali–Leh</b> likely closes {day(axes[1].closure_p20)} to {day(axes[1].closure_p80)}</span>
             <span><b>Zoji La</b> {day(axes[0].closure_p20)} to {day(axes[0].closure_p80)}</span>
-            <Chip kind="real" label="Real closure dates">Window = 20th to 80th percentile of 31 real past winters (Open-Meteo ERA5), rule fitted on real closure dates. Leave-one-winter-out error: Zoji La {axes[0].rule.loo_error_days} days, Manali–Leh {axes[1].rule.loo_error_days} days.</Chip>
+            <Chip kind="real" label="Real closure dates">Pass closure window = 20th to 80th percentile of {pnr.data?.winters_replayed} real past winters (Open-Meteo ERA5), rule fitted on real closure dates of these passes. Leave-one-winter-out error: Zoji La {axes[0].rule.loo_error_days} days, Manali–Leh {axes[1].rule.loo_error_days} days.</Chip>
           </>}
           <span className="push"><b>{sources.data?.length ?? '–'} data sources</b>, {warn ? <span className="warn-text">{warn} warning</span> : 'all healthy'}</span>
           <Chip kind="real" label="Runs fully on-premise">Everything runs on this machine (in deployment: the Army's own network). Internet is used only for one-time real-data downloads, then cached.</Chip>

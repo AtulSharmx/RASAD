@@ -9,7 +9,7 @@ export default function Pnr() {
   const pnr = useApi(`pnr?mode=${mode}`, true)
   const [sel, setSel] = useState<string | null>(null)
   if (pnr.error) return <div className="page"><ErrorNote error={pnr.error} retry={pnr.reload} /></div>
-  if (!pnr.data) return <div className="page"><Skeleton h={500} label="Replaying 31 winters" /></div>
+  if (!pnr.data) return <div className="page"><Skeleton h={500} label="Replaying past winters" /></div>
 
   const items: Row[] = pnr.data.items.filter((i: Row) => ['passed', 'urgent', 'watch'].includes(i.status))
   const stocked = pnr.data.items.length - items.length
@@ -19,13 +19,14 @@ export default function Pnr() {
     <div className="page">
       <div className="page-head">
         <h1>Point of no return</h1>
-        <p>The last day a convoy can still get through, learned from real closure dates and {pnr.data.winters_replayed} real winters. After it, only air.</p>
+        <p>The last day a convoy can still get through. Pass closures are learned from real closure dates; forward roads and tracks use PLACEHOLDER scaling rules. Both are replayed over {pnr.data.winters_replayed} real winters of weather. After the last day, only air.</p>
+        <span className="tools"><Chip kind="ph" label="PLACEHOLDER: forward-track rules">Forward roads and tracks have no public closure dates. They reuse the Manali–Leh rule fitted on real dates, scaled by placeholder factors: a lower closing threshold by road type, more snow with height, and a reopening lag. Listed in docs/PLACEHOLDERS.md.</Chip></span>
       </div>
 
       <div className="grid2" style={{ gridTemplateColumns: '1fr 1.25fr', alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
           {items.map((i) => {
-            const passed = i.status === 'passed'
+            const passed = i.status === 'passed', closed = passed && i.route_closed
             const on = pick && i.post === pick.post && i.class === pick.class
             return (
               <button key={i.post + i.class} className="strip-link" style={{ border: 0, padding: 0, background: 'none', textAlign: 'left', cursor: 'pointer', outline: on ? '3px solid var(--ink)' : undefined }}
@@ -34,9 +35,9 @@ export default function Pnr() {
                   <Holder mode={passed ? 'helicopter' : i.dispatch_by.includes('mule') ? 'mule' : i.dispatch_by.includes('jeep') ? 'jeep' : 'truck'} />
                   <div className="cells">
                     <div className="cell who"><span className="v">{shortName(i.post_name)}</span><span className="k">{i.label}</span></div>
-                    <div className="cell"><span className="k">Closes (20–80%)</span><span className="v" style={{ fontSize: '1.2rem' }}>{passed ? 'Closed now' : `${day(i.closure_p20)}–${day(i.closure_p80)}`}</span></div>
-                    <div className="cell due"><span className="k">{passed ? 'Ground route' : `Last ${i.dispatch_by} day (80%)`}</span><span className="v">{passed ? 'Closed' : day(i.last_safe_dispatch)}</span></div>
-                    <div className="why"><p>{passed ? `Ground route closed: air only now, ~${i.cost_multiple}× the road cost.` : `After ${day(i.last_safe_dispatch)}: air only, ~${i.cost_multiple}× the road cost, ${i.heli_sorties} helicopter sorties.`}</p><span className="chips"><Chip kind="ph" label="PLACEHOLDER cost">{rupee(i.cost_basis)}</Chip></span></div>
+                    <div className="cell"><span className="k">Closes (20–80%)</span><span className="v" style={{ fontSize: '1.2rem' }}>{closed ? 'Closed now' : `${day(i.closure_p20)}–${day(i.closure_p80)}`}</span></div>
+                    <div className="cell due"><span className="k">{passed ? 'Ground route' : `Last ${i.dispatch_by} day (80%)`}</span><span className="v">{closed ? 'Closed' : passed ? 'Too late' : day(i.last_safe_dispatch)}</span></div>
+                    <div className="why"><p>{closed ? `Ground route closed (road bulletin): air only now, ~${i.cost_multiple}× the road cost.` : passed ? `A convoy can no longer arrive before the route closes: air only, ~${i.cost_multiple}× the road cost.` : `After ${day(i.last_safe_dispatch)}: air only, ~${i.cost_multiple}× the road cost, ${i.heli_sorties} helicopter sorties.`}</p><span className="chips"><Chip kind="ph" label="PLACEHOLDER cost">{rupee(i.cost_basis)}</Chip></span></div>
                   </div>
                 </article>
               </button>

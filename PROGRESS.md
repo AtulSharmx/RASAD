@@ -109,7 +109,7 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
 - **Step 9 (6 Oct 2026, lean): data alerts** in `backend/anomaly.py`, `/api/alerts`, an Alerts screen (nav item and a dashboard link).
   - Expected use per person = LightGBM median model (weather, height, season, post). r = log(actual/expected); noise = robust MAD per series.
   - One-day spike (> 5 noise widths and ≥ 3×) → likely data error. A 7-day median ≥ 2 noise widths and ≥ 1.2× → steady excess (< 2×, possible leak/pilferage) or sharp surge (≥ 2×, confirm with the post). Silent IoT sensors come from the adapter health.
-  - Result on demo data: exactly the 3 injected anomalies (Bravo rations data error, Hotel kerosene steady excess 1.37×, Charlie medical surge 3.1×) plus Hotel's silent sensor, and no false alarms. The self-check verifies this against `data/anomaly_truth.json`. The QM QR page was skipped (as agreed).
+  - Result on demo data: exactly the 3 injected anomalies (Bravo rations data error, Hotel kerosene steady excess 1.37×, Charlie medical surge 3.1×) plus Hotel's silent sensor, and no false alarms on this demo data. On other simulated seeds about one false alarm per run appeared (`docs/VERIFY_REPORT.md`), so the thresholds need tuning on real data. The self-check verifies this against `data/anomaly_truth.json`. The QM QR page was skipped (as agreed).
 
 ## Known limits (say these honestly)
 - **Roles are demo-only.** The brief asks for demo roles with no real login, so `role` and `user` come from the request (the role picker). Anyone who can reach the API can claim "Commander". Mitigations: the server listens only on 127.0.0.1, and FastAPI parses only JSON bodies, which blocks simple cross-site form posts. Production would take the identity from Army SSO/PKI and map roles on the server. An automated security review flagged this on 5 Oct; it was acknowledged and documented, not fixed (by design for the demo).
@@ -130,6 +130,17 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
 - **Fixed (6 Oct 2026): map labels and the guided-demo card.**
   - Guided-demo moment 1: the card now sits in the map's empty north-east (`cardIn: 'map'`), so Delta, Foxtrot and Alpha all stay visible at 1366×768 and 1920×1080.
   - A post whose track leaves eastwards gets its label on the west side (Golf, Charlie). The westernmost post (Hotel) has no room there, so its label sits above the marker.
+- **Verification (6 Oct 2026):** read-only skeptical check in `docs/VERIFY_REPORT.md`.
+  - Verdict: partly real. The engine is real (tested with changed inputs). The scenario and some claims were staged.
+- **Honesty patch (6 Oct 2026), no new features, no data or number changes:**
+  - Guided demo, Dashboard and Drones texts are now built from live data. This covers the posts-at-risk count, closed-route reason (from the bulletin), drone payload, the "x times cheaper" figure, the main mode for Alpha, and the drone headline post and distance. The PNR API gained `route_closed` / `route_note`; the drone API reports `focus` instead of a fixed Foxtrot.
+  - Point of no return says pass dates are learned from real closures, while forward tracks use PLACEHOLDER scaling.
+  - Every accuracy number carries "measured on simulated data — real accuracy unknown until real CICG data is connected".
+  - Alerts say "tested on simulated data; thresholds need tuning on real data".
+  - The plan says "best plan found within the 20-second time limit" when the solver stops early.
+  - "Sync all now" (and the Live refresh) asks before recalculating, and the warm-up restarts at once.
+  - `requirements.txt` pins the exact installed versions.
+  - README, DEMO_SCRIPT, EXPLAIN_SIMPLY (3 admissions added as Q24–26), TROUBLESHOOTING and PLAN updated.
 - **CODE FREEZE (6 Oct 2026): no new features.** From here on, only demo rehearsal and bug fixes.
 - Optional: rehearse with `docs/DEMO_SCRIPT.md`; add screenshots to the PPT from `screenshots/`.
 

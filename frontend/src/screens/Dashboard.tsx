@@ -7,8 +7,11 @@ import { Chip, costChip, ErrorNote, Holder, Skeleton } from '../ui'
 export function whyLine(s: Row) {
   const i = s.item
   const drone = s.lines?.find((l: Row) => l.mode === 'drone')
-  if (i.status === 'passed')
-    return `Track closed by snow. ${drone ? `Drone from ${drone.from}: ${drone.trips} sorties on ${drone.when}, 15 kg each.` : 'Air only.'} Helicopter would cost ~${i.cost_multiple}× the road.`
+  if (i.status === 'passed') {
+    const why = i.route_closed ? `Ground route closed${i.route_note ? `: ${i.route_note.replace(/\.?$/, '.')}` : '.'}` : 'A convoy can no longer arrive before the route closes.'
+    const pay = drone?.assumptions?.find((a: Row) => a.name === 'drone payload')?.value
+    return `${why} ${drone ? `Drone from ${drone.from}: ${drone.trips} sorties on ${drone.when}${pay ? `, ${pay} each` : ''}.` : 'Air only.'} Helicopter would cost ~${i.cost_multiple}× the road.`
+  }
   const modes = [...new Set((s.lines ?? []).map((l: Row) => l.mode))].join(' + ')
   return `Road open until ${day(i.closure_p20)} (80% confidence).${modes ? ` Plan: ${modes}.` : ''} Road ₹${fmt(i.road_inr_per_kg, 1)}/kg vs helicopter ₹${fmt(i.air_inr_per_kg)}/kg.`
 }

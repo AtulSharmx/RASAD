@@ -41,7 +41,8 @@ def records(df) -> list[dict]:
 @app.get("/api/health")
 def health(mode: Mode = "demo"):
     return {"ok": True, "mode": mode, "now": world.clock(mode).isoformat(), "sector": db.SECTOR["label"],
-            "note": "Runs fully on-premise. Military data is simulated; weather, terrain and roads are real."}
+            "note": "Runs fully on-premise. Military data, posts and forward tracks are simulated; weather, terrain, "
+                    "national highways and pass-closure dates are real."}
 
 
 @app.get("/api/sector")
@@ -80,13 +81,14 @@ def live_refresh():
 
 
 def clear_caches() -> None:
-    """Results depend on the data; recompute after any reload."""
+    """Results depend on the data; recompute after any reload, starting at once in the background."""
     forecast.clear()
     closure.run.cache_clear()
     planner.run.cache_clear()
     drones.advise.cache_clear()
     anomaly.run.cache_clear()
     scenarios.run.cache_clear()
+    threading.Thread(target=warm_up, daemon=True).start()
 
 
 @app.get("/api/pnr")

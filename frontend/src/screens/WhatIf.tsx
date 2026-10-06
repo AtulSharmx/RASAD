@@ -54,6 +54,7 @@ export default function WhatIf() {
         </section>
         <section className="panel" aria-label="Plan with this change">
           <h2>The plan with this change</h2>
+          {sel.solver && sel.solver !== 'OPTIMAL' && <p className="watch-text" style={{ margin: '0 0 .4rem' }}>Best plan found within the {sel.time_limit_s}-second time limit; not proven cheapest.</p>}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem' }}>
             {moved.map((l: Row) => (
               <div key={l.key} className="strip" style={{ gridTemplateColumns: '3.6rem 1fr' }}>

@@ -57,7 +57,7 @@ export function Chip({ kind, label, children }: { kind: 'real' | 'sim' | 'ph'; l
 }
 
 const STATUS: Record<string, [string, typeof CheckCircle2]> = {
-  passed: ['Road closed: air only', OctagonAlert], urgent: ['Urgent', OctagonAlert], watch: ['Watch', Clock],
+  passed: ['Air only', OctagonAlert], urgent: ['Urgent', OctagonAlert], watch: ['Watch', Clock],
   margin: ['Within margin', CircleDashed], stocked: ['Stocked', CheckCircle2],
   approved: ['Approved', CheckCircle2], rejected: ['Rejected', OctagonAlert], modified: ['Modified', CircleDashed], pending: ['Pending', Clock],
   ok: ['Healthy', CheckCircle2], warning: ['Warning', Clock], stale: ['Stale', Clock], error: ['Error', OctagonAlert],

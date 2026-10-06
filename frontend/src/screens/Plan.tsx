@@ -74,7 +74,8 @@ export default function Plan() {
     <div className="page">
       <div className="page-head">
         <h1>Mixed-fleet plan, next 7 days</h1>
-        <p>Which mode carries which load. Road loads always leave before their last road day. Total {lakh(d.total_cost_inr)}, {heli} helicopter sorties.</p>
+        <p>Which mode carries which load. Road loads always leave before their last road day. Total {lakh(d.total_cost_inr)}, {heli} helicopter sorties.
+          {d.solver !== 'OPTIMAL' && <b className="watch-text"> Best plan found within the {d.time_limit_s}-second time limit; the solver did not prove it is the cheapest.</b>}</p>
         <span className="tools"><Badge status={role === 'Commander' ? 'approved' : 'pending'} text={role === 'Commander' ? 'You can approve' : `${role}: ${role === 'Post QM' ? 'view only' : 'can modify'}`} /></span>
       </div>
       <div className="panel" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '.7rem', padding: '.5rem .8rem', flexWrap: 'wrap' }} aria-label="Flying weather this week">

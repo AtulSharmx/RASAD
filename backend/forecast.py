@@ -4,7 +4,9 @@ Model: LightGBM quantile regression (P10 / P50 / P90) of the daily use PER PERSO
 the post (real, adjusted for its altitude), altitude, time of year and the post itself. Multiplying by
 troop strength gives the post's demand, so a troop change flows straight into the forecast.
 Honesty check: on the last 60 days the model never saw, against the naive "28-day average". For each class
-the better of the two is used, and its band is calibrated so it really holds ~80% of real days.
+the better of the two is used, and its band is calibrated so it holds ~80% of held-out days.
+All of this is measured on SIMULATED use that was generated from the same weather and height inputs, so the
+scores are optimistic; real accuracy is unknown until real CICG data is connected.
 """
 
 import lightgbm as lgb
@@ -129,7 +131,7 @@ def evaluate(mode: str = "demo") -> tuple[pd.DataFrame, dict]:
             "select_from": sel.date().isoformat(), "select_to": (hold - DAY).date().isoformat(),
             "test_from": hold.date().isoformat(), "test_to": (now - DAY).date().isoformat(),
             "plain": f"{label}: using the {METHODS[use][0]} because {why}. On the final 60 days (not used for any "
-                     f"choice) its typical daily error was {r['error']:.0f}% and {r['cov']:.0f}% of real days fell "
+                     f"choice) its typical daily error was {r['error']:.0f}% and {r['cov']:.0f}% of the held-out days fell "
                      "inside the band (aim: 80%)."})
     return pd.DataFrame(rows), choice
 

@@ -49,7 +49,7 @@ def run(mode: str, sid: str) -> dict:
     if after["cost_inr"] < before["cost_inr"] and after["not_moved_kg"] > before["not_moved_kg"]:
         changes.append("Cost is lower only because some loads could not move this week (not a saving).")
     return {"id": sid, "title": SCENARIOS[sid], "before": before, "after": after, "changes": changes,
-            "plan": plan["lines"]}
+            "plan": plan["lines"], "solver": plan["solver"], "time_limit_s": plan["time_limit_s"]}
 
 
 def all_runs(mode: str = "demo") -> list[dict]:

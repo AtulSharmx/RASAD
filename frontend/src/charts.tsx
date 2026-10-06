@@ -46,7 +46,7 @@ export function BandChart({ actual, forecast, unit }: { actual: Row[]; forecast:
   )
 }
 
-/* Chance the ground route is closed by each date (31 real winters replayed), with the 80% line. */
+/* Chance the ground route is closed by each date (past real winters replayed), with the 80% line. */
 export function ClosureCurve({ curve, lastSafe, label }: { curve: Row[]; lastSafe?: string; label: string }) {
   const [hover, setHover] = useState<number | null>(null)
   const pts = curve.slice(0, 75)

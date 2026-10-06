@@ -17,7 +17,8 @@ Ghabraiye mat. Har samasya ke saath seedha upaay likha hai. Ye sab 6 Oct 2026 ke
 | Screens par grey patti (loading) 30–40 second tak | RASAD shuru hone ke baad results taiyaar kar raha hai | Ruko. Demo se 10 min pehle `start.bat` chalao, aur ek baar Guided demo khol kar band karo, taaki sab garam ho jaye |
 | "Could not load this screen" | RASAD window band hai, ya abhi shuru ho raha hai | RASAD window khuli hai? Nahi to `start.bat`. Hai to 20 sec ruko, phir **Try again** |
 | Galat screen khul gayi | Kisi ne galat button daba diya | Guided demo card par **Back / Next**, ya baayein nav se sahi screen. Ya `?demo=N` wala address |
-| Guided demo card kuch dhak raha hai | Card hamesha spotlight ke ulti taraf aata hai; chhoti screen par bhi dhak sakta hai | Card ke andar **Close**, baat karo, phir `?demo=N` se wapas aao |
+| Guided demo card kuch dhak raha hai | Card spotlight ke ulti taraf aata hai (moment 1 mein map ke khaali upar-daayein kone mein); bahut chhoti screen par phir bhi dhak sakta hai | Card ke andar **Close**, baat karo, phir `?demo=N` se wapas aao |
+| "Sync all now" daba diya, ab screens loading dikha rahi hain | Sync har source dobara padhta hai aur har screen dobara calculate hoti hai (app pehle poochhta bhi hai) | ~1 minute ruko, phir **Ctrl + F5**. Demo ke beech ye button mat dabao |
 | Pichhli practice ke "Approved" stamp ya audit entries dikh rahe hain | Approvals database mein save rehte hain | RASAD window band karo → `reset_demo.bat` (1 min se kam) → `start.bat` |
 | `reset_demo.bat` kehta hai "RASAD is still running" | Reset sirf tab hota hai jab RASAD band ho | RASAD window band karo, phir reset dobara |
 | Dobara `start.bat` dabaya to sirf browser khula | RASAD pehle se chal raha hai; ye sahi hai | Kuch nahi karna. Wahi browser tab use karo |

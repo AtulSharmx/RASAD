@@ -51,6 +51,7 @@ def _flyable(mode: str, days: list, grounded: int) -> dict:
 
 
 CEILING_M = {"up_to_6000ft": 1829, "6000_12000ft": 3658, "12000_20000ft": 6096}  # top of each RFI band
+TIME_LIMIT_S = 20  # the solver stops here; if it has not proved the plan optimal, the UI says so
 
 
 def _supply(node_id: str, links: dict) -> tuple[float, float]:
@@ -90,6 +91,7 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
         open_route = all(r["status"] != "closed" for r in db.query(
             "SELECT status FROM road_status WHERE segment IN (?, ?)", (last["id"], to_rh["id"])))
         last_safe = pd.Timestamp(ld["last_safe_dispatch"])
+        ld["_closed"] = not open_route
         cand = []
         if open_route:  # ground options, only up to the Point of No Return
             ground_days = [d for d in days if d <= last_safe]
@@ -202,7 +204,7 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
     cost = sum(ten(o["cost"][0]) * o["trips"] + ten(o["cost"][1] + o["delay"]) * o["kg"] for o in opts)
     m.minimize(cost + sum(ten(ld["_pen"]) * ld["_short"] for ld in loads))
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 20
+    solver.parameters.max_time_in_seconds = TIME_LIMIT_S
     solver.parameters.num_workers = 1  # same answer every run
     solver.parameters.random_seed = 42
     status = solver.solve(m)
@@ -231,7 +233,13 @@ def plan(mode: str = "demo", pnr: dict | None = None, drones_at: dict | None = N
             "heli_hours_allotted": {d.date().isoformat(): hours.get(d.date().isoformat(), 0) for d in days},
             "total_cost_inr": round(sum(l["cost_inr"] for l in lines)),
             "watch": [{"post": w["post_name"], "class": w["label"], "last_safe_dispatch": w["last_safe_dispatch"]} for w in watch],
-            "solver": solver.status_name(status)}
+            "solver": solver.status_name(status), "time_limit_s": TIME_LIMIT_S}  # FEASIBLE = best found within the limit
+
+
+def _closed_text(ld: dict) -> str:
+    """'the ground route is closed (blocked by fresh snow)': the reason comes from the road bulletin."""
+    note = ld.get("route_note", "").rstrip(".")
+    return "the ground route is closed" + (f" ({note[0].lower()}{note[1:]})" if note else "")
 
 
 def _line(mode, ld, kind, src, kg, trips, cost_inr, ds, o, nodes, sched=()) -> dict:
@@ -260,7 +268,8 @@ def _line(mode, ld, kind, src, kg, trips, cost_inr, ds, o, nodes, sched=()) -> d
                        (f"{kind}s at {nodes[src]['name']}", str(fleet), "PLACEHOLDER"),
                        (f"{kind} cost", f"Rs {costs.C[kind + '_inr_per_trip_km']['v']}/trip-km", "PLACEHOLDER")]
     elif kind == "helicopter":
-        why_not_ground = ("the ground route is closed" if ld["status"] == "passed"
+        why_not_ground = (_closed_text(ld) if ld["_closed"]
+                          else "a convoy can no longer arrive before the route closes" if ld["status"] == "passed"
                           else f"the ground route closes by {pd.Timestamp(ld['last_safe_dispatch']):%d %b}")
         why_not_drone = "; ".join(ld["_drone_note"]) or "drones are busy or grounded"
         reason = (f"{trips} sorties to {nodes[src]['name']} on flyable days: {why_not_ground}; {why_not_drone}. "
@@ -270,7 +279,8 @@ def _line(mode, ld, kind, src, kg, trips, cost_inr, ds, o, nodes, sched=()) -> d
                        ("helicopter hours per day", f"{F['heli_hours_per_day']['v']}", "PLACEHOLDER")]
     elif kind == "drone":
         n_drones, dist, top, flight, cycle = o["extra"]
-        why = "track closed by snow" if ld["status"] == "passed" else "fast and cheap for small urgent loads"
+        why = (_closed_text(ld) if ld["_closed"] else "a convoy can no longer arrive before the route closes"
+               if ld["status"] == "passed" else "fast and cheap for small urgent loads")
         days_txt = "; ".join(
             f"{d:%d %b}: {s} sorties = {min(n_drones, s)} drones x up to {math.ceil(s / min(n_drones, s))} sorties, "
             f"{s} battery charges" for d, s, _ in sched)
