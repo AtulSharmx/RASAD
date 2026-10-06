@@ -4,7 +4,7 @@ import { Badge, Chip, ErrorNote, Skeleton } from '../ui'
 
 const LOOK: Record<string, [string, string]> = {
   'silent sensor': ['warning', 'Sensor silent'], 'steady excess': ['urgent', 'Unexplained excess'],
-  'sharp surge': ['watch', 'Sharp surge'], 'data error': ['margin', 'Likely data error'],
+  'sharp surge': ['watch', 'Possible surge'], 'data error': ['margin', 'Possible data error'],
 }
 
 export default function Alerts() {
@@ -15,7 +15,7 @@ export default function Alerts() {
     <div className="page">
       <div className="page-head">
         <h1>Data alerts</h1>
-        <p>Unusual use compared with what the weather, height and season explain, and sensors that stopped reporting. Each alert is a question to check, not an accusation.</p>
+        <p>Unusual use compared with what the weather, height and season explain, and sensors that stopped reporting. Every alert is a possibility to verify on ground, never a finding.</p>
         <span className="tools"><Chip kind="sim" label="Simulated data" /></span>
       </div>
       {!alerts.data ? <Skeleton h={300} label="Checking every post's consumption" /> : alerts.data.length === 0 ? (

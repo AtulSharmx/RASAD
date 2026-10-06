@@ -69,14 +69,15 @@ def run(mode: str = "demo") -> list[dict]:
                     when = f"{d0:%d %b}" if days == 1 else f"{d0:%d %b} to {d1:%d %b}"
                     who = f"{names[post]} {c['label'].lower()}"
                     if not is_run:
-                        kind, plain = "data error", (f"{who}: on {when} the record shows {ratio:.1f}× the usual use, then normal again. "
-                                                     "Most likely a data-entry error; check that day's entry in the inventory system.")
+                        kind, plain = "data error", (f"Possible data-entry error — verify on ground. {who}: on {when} the record shows "
+                                                     f"{ratio:.1f}× the usual use, then normal again; check that day's entry against the post's issue register.")
                     elif ratio >= SURGE_RATIO:
-                        kind, plain = "sharp surge", (f"{who}: {days} days ({when}) at {ratio:.1f}× the expected use. Could be a genuine "
-                                                      "surge in need; confirm with the post before treating it as an error.")
+                        kind, plain = "sharp surge", (f"Possible genuine surge in need — verify on ground. {who}: {days} days ({when}) at "
+                                                      f"{ratio:.1f}× the expected use; confirm the reason with the post.")
                     else:
-                        kind, plain = "steady excess", (f"{who}: {days} days ({when}) at {ratio:.2f}× what the weather and season explain "
-                                                        f"(+{extra:,.0f} {c['unit']}). Possible leak or pilferage; check the store and the issue register.")
+                        kind, plain = "steady excess", (f"Possible leak, unrecorded issue or pilferage — verify on ground. {who}: {days} days "
+                                                        f"({when}) at {ratio:.2f}× what the weather and season explain (+{extra:,.0f} {c['unit']}); "
+                                                        "check the store and the issue register.")
                     alerts.append({"post": post, "post_name": names[post], "class": cls, "label": c["label"], "unit": c["unit"],
                                    "kind": kind, "start": str(d0.date()), "end": str(d1.date()), "days": days,
                                    "ratio": round(ratio, 2), "extra": round(extra, 1), "plain": plain})
@@ -92,7 +93,8 @@ def run(mode: str = "demo") -> list[dict]:
                 hours = (pd.Timestamp(db.PARAMS["demo"]["now"]) - pd.Timestamp(last[post])).total_seconds() / 3600
                 alerts.append({"post": post, "post_name": names[post], "class": "kerosene", "label": "Kerosene / fuel", "unit": "L",
                                "kind": "silent sensor", "start": last[post][:10], "end": last[post][:10], "days": 0, "ratio": None,
-                               "extra": None, "plain": f"The fuel-tank sensor at {names[post]} has been silent for {hours:.0f} hours (last reading "
-                               f"{pd.Timestamp(last[post]):%d %b %H:%M}). RASAD uses the inventory figure instead; send someone to check the sensor."})
+                               "extra": None, "plain": f"Possible sensor or power fault — verify on ground. The fuel-tank sensor at {names[post]} has "
+                               f"been silent for {hours:.0f} hours (last reading {pd.Timestamp(last[post]):%d %b %H:%M}); until it reports again, "
+                               "RASAD uses the inventory figure."})
     order = {"silent sensor": 0, "steady excess": 1, "sharp surge": 2, "data error": 3}
     return sorted(alerts, key=lambda a: (order[a["kind"]], a["start"]), reverse=False)

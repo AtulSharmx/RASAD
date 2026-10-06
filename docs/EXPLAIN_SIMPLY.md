@@ -86,7 +86,7 @@ Model batata hai ki mausam, oonchai aur mausam-ke-din ke hisaab se roz kitni kha
 - **Kai din bahut zyada** → shayad asli zaroorat (jaise altitude sickness). Demo: Charlie dawai, 3.1×.
 - **Sensor chup** → Hotel ka fuel sensor 46 ghante se chup hai; RASAD inventory ka number use karta hai.
 
-Har item ki apni "roz ki ghata-badhi" hoti hai (dawai zyada uchhalti hai, ration kam), isliye seema usi hisaab se tay hoti hai. Isse galat alarm nahi aate: demo data mein jaan-boojh kar daali gayi teeno anomalies pakdi gayi aur ek bhi galat alarm nahi aaya. Alert sirf ek sawal hai, ilzaam nahi.
+Har item ki apni "roz ki ghata-badhi" hoti hai (dawai zyada uchhalti hai, ration kam), isliye seema usi hisaab se tay hoti hai. Isse galat alarm nahi aate: demo data mein jaan-boojh kar daali gayi teeno anomalies pakdi gayi aur ek bhi galat alarm nahi aaya. Alert sirf ek sawal hai, ilzaam nahi: har alert "Possible … — verify on ground" se shuru hota hai, aur faisla zameen par jaanch ke baad insaan karta hai.
 
 ## 9. Commander ka faisla aur audit log
 

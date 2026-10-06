@@ -78,7 +78,7 @@ export default function Dashboard() {
           {S && (
             <div className="stocked">
               {alerts.data && alerts.data.length > 0 && (
-                <p style={{ margin: '0 0 .5rem' }}><a href="#/alerts"><b>{alerts.data.length} data alerts</b></a>: {alerts.data.map((a) => `${a.post_name.replace('Post ', '')} ${a.kind}`).join(', ')}</p>
+                <p style={{ margin: '0 0 .5rem' }}><a href="#/alerts"><b>{alerts.data.length} data alerts to verify on ground</b></a>: {[...new Set(alerts.data.map((a) => a.post_name.replace('Post ', '')))].join(', ')}</p>
               )}
               <h2>Stocked until the routes reopen</h2>
               <ul>

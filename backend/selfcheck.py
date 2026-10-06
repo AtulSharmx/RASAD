@@ -132,6 +132,8 @@ def check_alerts():
     assert found[("PH", "kerosene")]["kind"] in ("silent sensor", "steady excess")
     assert any(a["kind"] == "silent sensor" and a["post"] == "PH" for a in anomaly.run("demo")), "Hotel's silent sensor"
     assert len(anomaly.run("demo")) <= 6, "few false alarms"
+    for a in anomaly.run("demo"):  # never worded as a confirmed accusation
+        assert a["plain"].startswith("Possible ") and "verify on ground" in a["plain"], a["plain"]
 
 
 if __name__ == "__main__":
