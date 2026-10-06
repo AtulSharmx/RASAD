@@ -1,5 +1,7 @@
 # RASAD — Build plan (Step 0 output, waiting for OK)
 
+> **Historical plan from 5 Oct 2026; the built system differs.** For example, the forecast does not use troops or recent consumption as inputs (it predicts use per person), and the drone advisor tests one base at a time for this week only. See README.md and docs/VERIFY_REPORT.md for what the code actually does.
+
 ## 1. How it runs
 - **One process:** FastAPI serves both the API and the built React app at `http://localhost:8000`.
 - `start.bat`: on first run it creates a Python venv, installs packages, builds the frontend, downloads and caches the weather, and creates demo data. After that it just starts the app and opens the browser.

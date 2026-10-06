@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fmt, lakh, rupee, useApi, type Row } from '../api'
+import { fmt, lakh, rupee, shortName, useApi, type Row } from '../api'
 import { useApp } from '../App'
 import { Chip, Drone, ErrorNote, Helicopter, Skeleton } from '../ui'
 
@@ -40,16 +40,18 @@ export default function Drones() {
         <>
           <section className="panel" data-demo="drone-headline" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '1.2rem', alignItems: 'center', marginBottom: '.8rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem' }}>
-              <span className="holder heli" style={{ borderRadius: 6, padding: '.6rem' }}><Helicopter /><span>{a.foxtrot.heli_sorties_before}</span></span>
+              <span className="holder heli" style={{ borderRadius: 6, padding: '.6rem' }}><Helicopter /><span>{a.focus.heli_sorties_before}</span></span>
               <b style={{ font: '700 2rem var(--cond)' }}>→</b>
-              <span className="holder drone" style={{ borderRadius: 6, padding: '.6rem' }}><Drone /><span>{a.foxtrot.heli_sorties_after}</span></span>
+              <span className="holder drone" style={{ borderRadius: 6, padding: '.6rem' }}><Drone /><span>{a.focus.heli_sorties_after}</span></span>
             </div>
             <div>
               <h2 style={{ margin: '0 0 .2rem', font: '700 1.6rem/1.15 var(--cond)' }}>
-                {best.saved_inr > 0 ? `${a.n} drones at ${best.base_name}: Foxtrot needs ${a.foxtrot.heli_sorties_after} helicopter sorties instead of ${a.foxtrot.heli_sorties_before}, saving ${lakh(best.saved_inr)} this week` : `${a.n} drones of this band save nothing this week`}
+                {best.saved_inr > 0
+                  ? `${a.n} drone${a.n === 1 ? '' : 's'} at ${best.base_name}: ${a.focus.post ? `${shortName(a.focus.post)} needs ${a.focus.heli_sorties_after} helicopter sorties instead of ${a.focus.heli_sorties_before}, ` : ''}saving ${lakh(best.saved_inr)} this week`
+                  : `${a.n} drone${a.n === 1 ? '' : 's'} of this band save nothing this week`}
               </h2>
               <p style={{ margin: 0 }}>{rupee(a.headline.split(' Cost inputs')[0])}</p>
-              <p className="muted" style={{ margin: '.2rem 0 0', fontSize: '.92rem' }}>{a.assumption}</p>
+              <p className="muted" style={{ margin: '.2rem 0 0', fontSize: '.92rem' }}>{a.assumption}{a.solver_limited ? ' Some plans are the best found within the solver time limit.' : ''}</p>
             </div>
           </section>
           <table className="t" aria-label="Candidate bases">

@@ -13,11 +13,15 @@ export default function Sources() {
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const run = async (what: 'sync' | 'live') => {
+    // both reload data, so every screen recalculates: never let a click during the demo surprise the presenter
+    if (!window.confirm(`${what === 'sync' ? 'Sync all now re-reads every data source' : 'Refreshing the forecast reloads the weather'} and recalculates every screen. `
+      + 'Screens will show loading for up to a minute. Continue?')) return
     setBusy(what); setMsg(null)
     try {
       await api(what === 'sync' ? 'sources/sync' : 'live/refresh', { method: 'POST' })
       clearCache(); src.reload()
-      setMsg(what === 'sync' ? 'All sources re-read from their files.' : 'Real 16-day forecast downloaded and loaded.')
+      setMsg((what === 'sync' ? 'All sources re-read from their files.' : 'Real 16-day forecast downloaded and loaded.')
+        + ' Every screen is recalculating now (up to a minute).')
     } catch (e) { setMsg(String((e as Error).message)) } finally { setBusy(null) }
   }
   if (src.error) return <div className="page"><ErrorNote error={src.error} retry={src.reload} /></div>
@@ -61,6 +65,7 @@ export default function Sources() {
             <li>Copy a config like the one above into <code>sources/</code> and map its columns.</li>
             <li>Press <b>Sync all now</b>. The stream appears here with its health; no code changes.</li>
           </ol>
+          <p className="muted" style={{ margin: '.4rem 0 0', fontSize: '.92rem' }}>This works when the data fits one of the existing tables (stock, consumption, weather, road status, airlift, terrain, map geometry). A new kind of data needs code.</p>
         </section>
       </div>
     </div>

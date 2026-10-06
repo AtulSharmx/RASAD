@@ -143,7 +143,7 @@ export default function SectorMap({ sector, terrain, status, risk, droneLegs = [
       <div className="legend" aria-label="Map legend">
         <span><i style={{ borderColor: '#8a3a1c' }} />National highway</span><span><i style={{ borderColor: '#16212b' }} />Forward road</span>
         <span><i style={{ borderColor: '#16212b', borderTopStyle: 'dashed' }} />Jeep track</span><span><i style={{ borderColor: '#6b3d16', borderTopStyle: 'dotted' }} />Mule track</span>
-        <span><i style={{ borderColor: '#b0428f', borderTopStyle: 'dashed' }} />Drone leg</span><span><i style={{ borderColor: '#b8232b', borderTopStyle: 'dotted' }} />Closed by snow</span>
+        <span><i style={{ borderColor: '#b0428f', borderTopStyle: 'dashed' }} />Drone leg</span><span><i style={{ borderColor: '#b8232b', borderTopStyle: 'dotted' }} />Closed (bulletin)</span>
         <span><i className="sq" style={{ background: '#b8232b', borderTop: '2px solid #fff' }} />At risk (numbered)</span><span><i className="sq" style={{ background: '#1d6f43', borderTop: '2px solid #fff' }} />Stocked</span>
         <span><i style={{ borderColor: '#a8673a', borderTopWidth: 1 }} />Contour 200 m</span>
       </div>

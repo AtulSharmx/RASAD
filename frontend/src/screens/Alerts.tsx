@@ -15,8 +15,8 @@ export default function Alerts() {
     <div className="page">
       <div className="page-head">
         <h1>Data alerts</h1>
-        <p>Unusual use compared with what the weather, height and season explain, and sensors that stopped reporting. Every alert is a possibility to verify on ground, never a finding.</p>
-        <span className="tools"><Chip kind="sim" label="Simulated data" /></span>
+        <p>Unusual use compared with what the weather, height and season explain, and sensors that stopped reporting. Every alert is a possibility to verify on ground, never a finding. Tested on simulated data; thresholds need tuning on real data.</p>
+        <span className="tools"><Chip kind="sim" label="Simulated data">The thresholds were set on simulated data. On the demo data they find the 3 injected anomalies; on other simulated seeds about one false alarm per run appeared. They must be re-tuned on real CICG data.</Chip></span>
       </div>
       {!alerts.data ? <Skeleton h={300} label="Checking every post's consumption" /> : alerts.data.length === 0 ? (
         <div className="notice">No unusual use found. RASAD checks every post and supply each time the data is synced.</div>

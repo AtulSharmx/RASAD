@@ -71,6 +71,8 @@ def check_pnr():
     pa = items[("PA", "kerosene")]
     assert pa["status"] == "urgent" and 0 <= pa["days_left"] <= 7 and pa["cost_multiple"] > 1, pa
     assert items[("PD", "medical")]["status"] == "passed", "Delta's track is closed: air only"
+    assert items[("PD", "medical")]["route_closed"] and items[("PD", "medical")]["route_note"], "closure comes from the bulletin"
+    assert not items[("PA", "kerosene")]["route_closed"]
     assert items[("PF", "rations")]["status"] in ("urgent", "passed")
     assert sorted({i["post"] for i in r["items"] if i["status"] in ("passed", "urgent")}) == ["PA", "PD", "PF"]
     for c in r["curves"].values():
@@ -116,7 +118,9 @@ def check_step6():
         assert day["trips"] <= 4 * (8 * 60 // 55), day  # 4 drones, one sortie per ~55-min cycle
     a = drones.advise("demo")
     assert a["ranking"][0]["base_name"] == "Node Mike" and "Post Foxtrot" in a["ranking"][0]["posts_served"]
-    assert a["foxtrot"]["heli_sorties_after"] < a["foxtrot"]["heli_sorties_before"] and a["foxtrot"]["saved_inr"] > 0
+    f = a["focus"]  # the post that gains most is computed, not assumed
+    assert f["post"] == "Post Foxtrot" and f["heli_sorties_after"] < f["heli_sorties_before"] and f["saved_inr"] > 0, f
+    assert "19 km from the nearest drones (Roadhead Lima)" in a["headline"], a["headline"]
     runs = {r["id"]: r for r in scenarios.all_runs("demo")}
     assert runs["pass_early"]["after"]["posts_at_risk"] >= runs["pass_early"]["before"]["posts_at_risk"]
     assert runs["pass_early"]["after"]["heli_sorties"] > runs["pass_early"]["before"]["heli_sorties"]

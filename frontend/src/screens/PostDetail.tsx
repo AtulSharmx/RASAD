@@ -76,7 +76,7 @@ export default function PostDetail() {
               actual={series.data.actual.filter((r: Row) => r.class === sel)}
               forecast={series.data.forecast.filter((r: Row) => r.class === sel)} />
           ) : series.error ? <ErrorNote error={series.error} /> : <Skeleton h={230} />}
-          {acc && <p style={{ margin: '.5rem 0 0' }}>{acc.plain} <Chip kind="sim" label="Measured on simulated data">Accuracy is measured on simulated consumption. The method and band were chosen on {day(acc.select_from)} to {day(acc.select_to)}; the score is from {day(acc.test_from)} to {day(acc.test_to)} only.</Chip></p>}
+          {acc && <p style={{ margin: '.5rem 0 0' }}>{acc.plain} <b>Measured on simulated data — real accuracy unknown until real CICG data is connected.</b> <Chip kind="sim" label="Why">The simulated use was generated from the same temperature and height inputs the model sees, so these scores are optimistic. The method and band were chosen on {day(acc.select_from)} to {day(acc.select_to)}; the score is from {day(acc.test_from)} to {day(acc.test_to)} only.</Chip></p>}
         </section>
         <section className="panel" aria-label="Planned movements">
           <h2>Planned this week</h2>
