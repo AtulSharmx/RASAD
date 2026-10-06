@@ -4,10 +4,12 @@ import { day, lakh, shortName, useApi, type Row } from './api'
 import { useApp } from './App'
 
 type Data = { pnr: Row | null; plan: Row | null; drones: Row | null; whatif: Row[] | null }
-type Step = { route: string; target: string; title: string; say: (d: Data) => string }
+// cardIn: show the card in the top-right corner of that element instead of a screen corner
+type Step = { route: string; target: string; title: string; say: (d: Data) => string; cardIn?: string }
 
 const STEPS: Step[] = [
-  { route: 'dashboard', target: 'risk', title: 'Three posts at risk', say: ({ pnr }) => {
+  // the map's north-east has no posts at any screen size, so the card there never hides a post at risk
+  { route: 'dashboard', target: 'risk', cardIn: 'map', title: 'Three posts at risk', say: ({ pnr }) => {
     const first: Record<string, Row> = {} // items come most urgent first; keep the first per post
     for (const i of pnr?.items ?? []) if (['passed', 'urgent'].includes(i.status) && !first[i.post]) first[i.post] = i
     const risk = Object.values(first)
@@ -46,20 +48,24 @@ export default function GuidedDemo({ step, setStep }: { step: number; setStep: (
     drones: useApi('drones?mode=demo&n=20&band=12000_20000ft', true).data, whatif: useApi<Row[]>('scenarios?mode=demo', true).data,
   }
   const [rect, setRect] = useState<DOMRect | null>(null)
+  const [home, setHome] = useState<DOMRect | null>(null)
 
   useEffect(() => { go(s.route) }, [s.route, go])
   useEffect(() => {
     setRect(null)
+    setHome(null)
     let timer = 0, tries = 0, scrolled = false
     const find = () => { // the screen loads its data after navigation, so keep looking for the target
       const el = document.querySelector(`[data-demo="${s.target}"]`)
       if (el && !scrolled) { el.scrollIntoView({ block: 'nearest' }); scrolled = true }
       setRect(el ? el.getBoundingClientRect() : null)
+      const box = s.cardIn ? document.querySelector(`[data-demo="${s.cardIn}"]`) : null
+      setHome(box ? box.getBoundingClientRect() : null)
       if (tries++ < 150) timer = window.setTimeout(find, el ? 400 : 200)
     }
     find()
     return () => clearTimeout(timer)
-  }, [s.target])
+  }, [s.target, s.cardIn])
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setStep(null)
@@ -72,11 +78,13 @@ export default function GuidedDemo({ step, setStep }: { step: number; setStep: (
 
   const pad = 6
   const leftSide = rect ? rect.left + rect.width / 2 > window.innerWidth / 2 : false
+  const place = home ? { top: home.top + 44, right: window.innerWidth - home.right + 12, bottom: 'auto', left: 'auto' } // 44: below the map's chips
+    : leftSide ? { left: '6.4rem', right: 'auto' } : undefined
   return (
     <>
       {rect && <div className="demo-spot" aria-hidden style={{ top: rect.top - pad, left: rect.left - pad, width: rect.width + 2 * pad, height: rect.height + 2 * pad }} />}
       {!rect && <div className="demo-dim" style={{ background: 'rgba(22,33,43,.25)' }} />}
-      <div className="demo-card" role="dialog" aria-label="Guided demo" style={leftSide ? { left: '6.4rem', right: 'auto' } : undefined}>
+      <div className="demo-card" role="dialog" aria-label="Guided demo" style={place}>
         <div className="row"><span className="step">Moment {step + 1} of {STEPS.length}</span>
           <button className="btn btn-line btn-sm push" onClick={() => setStep(null)} aria-label="Close the guided demo"><X />Close</button></div>
         <h2>{s.title}</h2>

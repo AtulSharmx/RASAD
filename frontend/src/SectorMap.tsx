@@ -104,6 +104,12 @@ export default function SectorMap({ sector, terrain, status, risk, droneLegs = [
       const a = sector.nodes.find((n: Row) => n.name === leg.from || n.id === leg.from), b = nodes[leg.to]
       if (a && b) L.polyline([[a.lat, a.lon], [b.lat, b.lon]], { color: '#b0428f', weight: 3.5, dashArray: '10 6', interactive: false }).addTo(lg)
     }
+    // a post whose track leaves eastwards (within ~30°) gets its label on the west side, off the track
+    const west = new Set<string>()
+    for (const l of sector.links) for (const [a, b] of [[l.from_node, l.to_node], [l.to_node, l.from_node]]) {
+      const p = nodes[a], q = l.pass ? passes[l.pass] : nodes[b]
+      if (p?.kind === 'post' && q && q.lon > p.lon && Math.abs(q.lat - p.lat) * 1.2 < (q.lon - p.lon) * 0.6) west.add(a) // 1.2: map stretch at 34°N
+    }
     for (const p of sector.passes) {
       L.marker([p.lat, p.lon], { interactive: false, icon: label(`<div class="mpass">▲ ${p.name} ${fmt(p.alt_m)} m</div>`, 6, 9) }).addTo(lg)
     }
@@ -116,16 +122,19 @@ export default function SectorMap({ sector, terrain, status, risk, droneLegs = [
         if (onPost) sq.on('click', () => onPost(n.id))
         if (k >= 0) L.marker([n.lat, n.lon], { interactive: false, icon: L.divIcon({ className: '', iconSize: [44, 44], iconAnchor: [22, 22],
           html: `<div class="ring${focus === n.id ? ' hot' : ''}"><b class="num">${k + 1}</b></div>` }) }).addTo(lg)
-        L.marker([n.lat, n.lon], { interactive: false, icon: label(`<div class="mlabel">${shortName(n.name)} <small>${fmt(n.alt_m)} m</small></div>`, k >= 0 ? -26 : -12, 10) }).addTo(lg)
+        // the westernmost post has no room on its west (the map edge is there), so its label goes above instead
+        const gap = k >= 0 ? 26 : 12, side = !west.has(n.id) ? '' : n.lon === posts.getWest() ? 'north' : 'west'
+        const [ax, ay] = side === 'north' ? [0, gap + 18] : side === 'west' ? [gap, 10] : [-gap, 10]
+        L.marker([n.lat, n.lon], { interactive: false, icon: label(`<div class="mlabel ${side}">${shortName(n.name)} <small>${fmt(n.alt_m)} m</small></div>`, ax, ay) }).addTo(lg)
       } else if (['roadhead', 'node', 'depot'].includes(n.kind)) {
         L.circleMarker([n.lat, n.lon], { radius: 6, color: '#16212b', weight: 2, fillColor: '#fff', fillOpacity: 1, interactive: false }).addTo(lg)
         L.marker([n.lat, n.lon], { interactive: false, icon: label(`<div class="mlabel">${n.name}</div>`, -10, 10) }).addTo(lg)
       }
     }
-  }, [sector, status, risk, droneLegs, onPost, focus])
+  }, [sector, posts, status, risk, droneLegs, onPost, focus])
 
   return (
-    <div className="mapframe">
+    <div className="mapframe" data-demo="map">
       <div ref={el} className="map" role="region" aria-label="Map of Sector X with routes, passes and posts" />
       <div className="mapchips">
         <Chip kind="real" label="Real: terrain, roads, passes">Terrain: Copernicus DEM GLO-90 (contours every 200 m). Roads, passes, Leh: OpenStreetMap (ODbL). Cached on this machine; no international boundaries are shown.</Chip>
