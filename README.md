@@ -44,6 +44,7 @@ In deployment, the identity would come from the Army's own login (SSO/PKI); the 
 | Plan | Next 7 days: which mode carries which load, with reason, cost, assumptions; Approve / Modify / Reject |
 | Drones | If N drones of a height band arrive, which base saves the most |
 | What-if | Pass closes 10 days early, blizzard grounds helicopters, troops +20%, 20 drones arrive: before vs after |
+| Alerts | Unusual use (likely data error, unexplained excess, sharp surge) and IoT sensors that went silent |
 | Sources | The 10 data streams, their health, and the one config file behind each |
 | Audit log | Every approval, change and rejection, with who and when |
 

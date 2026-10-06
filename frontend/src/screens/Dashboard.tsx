@@ -49,6 +49,7 @@ export default function Dashboard() {
   const pnr = useApi(`pnr?mode=${mode}`, true)
   const fc = useApi(`forecast?mode=${mode}`, true)
   const plan = useApi(`plan?mode=${mode}`)
+  const alerts = useApi<Row[]>(`alerts?mode=${mode}`, true)
   const onPost = useCallback((id: string) => go(`post/${id}`), [go])
 
   const S = useMemo(() => (pnr.data ? postSummaries(pnr.data, plan.data, fc.data?.cover ?? null) : null), [pnr.data, plan.data, fc.data])
@@ -76,6 +77,9 @@ export default function Dashboard() {
           {risk.map((s, k) => <RiskStrip key={s.item.post} s={s} n={k + 1} />)}
           {S && (
             <div className="stocked">
+              {alerts.data && alerts.data.length > 0 && (
+                <p style={{ margin: '0 0 .5rem' }}><a href="#/alerts"><b>{alerts.data.length} data alerts</b></a>: {alerts.data.map((a) => `${a.post_name.replace('Post ', '')} ${a.kind}`).join(', ')}</p>
+              )}
               <h2>Stocked until the routes reopen</h2>
               <ul>
                 {rest.map((s) => (

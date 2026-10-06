@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException, Path, Query
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from backend import adapters, closure, costs, db, drones, forecast, planner, realdata, scenarios, world
+from backend import adapters, anomaly, closure, costs, db, drones, forecast, planner, realdata, scenarios, world
 
 def warm_up() -> None:
     """Pre-compute the demo results in the background so the screens open instantly."""
@@ -84,6 +84,7 @@ def clear_caches() -> None:
     closure.run.cache_clear()
     planner.run.cache_clear()
     drones.advise.cache_clear()
+    anomaly.run.cache_clear()
     scenarios.run.cache_clear()
 
 
@@ -139,6 +140,12 @@ def drone_advisor(mode: Mode = "demo", n: int = Query(20, ge=1, le=500),
 def what_ifs(mode: Mode = "demo"):
     """The four one-click what-ifs, each with before vs after."""
     return scenarios.all_runs(mode)
+
+
+@app.get("/api/alerts")
+def alerts(mode: Mode = "demo"):
+    """Unusual consumption (data errors, unexplained excess, surges) and silent IoT sensors."""
+    return anomaly.run(mode)
 
 
 @app.get("/api/costs")
