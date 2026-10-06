@@ -4,9 +4,8 @@ Candidate bases are staging points troops already hold and supply by road (roadh
 assumed stocked by road before its own route closes. For each candidate, the planner is re-run with the extra
 drones, and the base is ranked by the money, helicopter sorties and porter/mule trips it saves this week.
 """
-import functools
 
-from backend import costs, db, planner
+from backend import cache, costs, db, planner
 
 F = db.PARAMS["fleet"]
 
@@ -24,7 +23,7 @@ def kpis(plan: dict) -> dict:
                              for p in sorted({l["post_name"] for l in lines})}}
 
 
-@functools.lru_cache(maxsize=8)
+@cache.memo(maxsize=8)
 def advise(mode: str = "demo", n: int = 20, band: str = "12000_20000ft") -> dict:
     existing = F["drones_at"]["v"]
     before = kpis(planner.run(mode))

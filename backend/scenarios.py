@@ -1,8 +1,7 @@
 """Step 6 (USP E): one-click what-ifs. Each changes only the inputs, re-runs the Point of No Return and the
 plan, and reports before vs after."""
-import functools
 
-from backend import closure, db, drones, planner
+from backend import cache, closure, db, drones, planner
 
 TROOPS = (("PA", 1.2), ("PB", 1.2), ("PC", 1.2))
 SCENARIOS = {
@@ -20,7 +19,7 @@ def _kpis(pnr: dict, plan: dict) -> dict:
     return {"posts_at_risk": len(risk), "at_risk": risk, **k}
 
 
-@functools.lru_cache(maxsize=16)
+@cache.memo(maxsize=16)
 def run(mode: str, sid: str) -> dict:
     base_pnr, base_plan = closure.run(mode), planner.run(mode)
     pnr = base_pnr

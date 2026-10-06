@@ -119,8 +119,17 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
 
 ## Next
 - **CLAUDE.md added (6 Oct 2026):** standing rules for Claude (UI/UX, clean modular code, plan before editing, no guessing, project safety rules).
-- **Fix 1: cold-start pile-up (critical).** On a fresh start, every page load asks the server for `/api/pnr`. The server then computes the same ~12 s closure result again for each request, in parallel with the warm-up, so a few reloads make it slower and slower. Tested: >120 s with a blank dashboard. Fix: let duplicate requests wait for the first calculation, and warm up `/api/pnr` first.
-- **Fix 2: map hides the top risk post at 1280×720.** At 1280×720 (a common projector size), Post Delta (#1 risk) is off the map, and at 1366×768 it is half cut off. The map crops the terrain to fill the frame. Fix: frame the map so that every post stays visible.
+- **Fixed (6 Oct 2026): cold-start pile-up.**
+  - The problem: on a fresh start, each page load and reload recomputed the same ~12 s closure result in parallel, so reloads made it slower and slower (>120 s with a blank dashboard).
+  - The fix: `backend/cache.py` (`memo`) replaces `lru_cache` on the heavy calculations. A caller that asks while the same result is being computed now waits for it instead of starting a copy. The warm-up computes the closure result first, and the selfcheck has `check_cache`.
+  - Result: 6 dashboard loads sent at once to a fresh server all answer in ~13 s.
+- **Fixed (6 Oct 2026): map framing.**
+  - The problem: at 1280×720 the map hid Post Delta (#1 risk), and at 1366×768 Delta and Hotel were half cut off.
+  - The fix: the map now fits all posts, with room for labels and controls, and refits when the screen size changes. It never pans past the terrain edge.
+  - Checked at 1024×768, 1280×720, 1366×768 and 1920×1080. Screenshots 01, 10 and 11 were recaptured.
+- Small leftovers (optional):
+  - At 1366×768 the Hotel label touches the track to Roadhead Lima.
+  - In guided-demo moment 1 at 1366×768, the popover covers Post Foxtrot on the map.
 - Optional: rehearse with `docs/DEMO_SCRIPT.md`; add screenshots to the PPT from `screenshots/`.
 
 ## How to run

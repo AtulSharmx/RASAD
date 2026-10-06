@@ -7,13 +7,12 @@ For every post and supply, the weather-aware model says how much use per person 
 - several days far above                  -> a sharp surge (could be genuine need; confirm with the post).
 Thresholds scale with each series' own day-to-day noise, so a noisy item (medicine) needs a bigger jump.
 """
-import functools
 
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
-from backend import adapters, db, forecast, world
+from backend import adapters, cache, db, forecast, world
 
 SPIKE_SIGMA, SPIKE_MIN_RATIO = 5, 3.0  # one-day jump: 5 noise widths and at least 3x
 # several days: the 7-day MEDIAN must sit 2 noise widths high (so at least 4 of 7 days are high; one spike cannot do it)
@@ -38,7 +37,7 @@ def _episodes(mask: np.ndarray) -> list[tuple[int, int]]:
     return out
 
 
-@functools.lru_cache(maxsize=4)
+@cache.memo(maxsize=4)
 def run(mode: str = "demo") -> list[dict]:
     now = world.clock(mode).normalize()
     hist = forecast._history(mode, forecast._frame(mode, now - forecast.DAY))

@@ -62,23 +62,26 @@ export default function SectorMap({ sector, terrain, status, risk, droneLegs = [
   const map = useRef<L.Map | null>(null)
   const layer = useRef<L.LayerGroup | null>(null)
   const g = useMemo(() => grid(terrain), [terrain])
+  const posts = useMemo(() => L.latLngBounds(sector.nodes.filter((n: Row) => n.kind === 'post').map((n: Row) => [n.lat, n.lon] as [number, number])), [sector])
 
   useEffect(() => {
     if (!el.current) return
     const m = L.map(el.current, { zoomControl: false, attributionControl: false, zoomSnap: 0.1, zoomDelta: 0.5, minZoom: 8, maxZoom: 13 })
     const bounds = L.latLngBounds([[g.lat0, g.lon0], [g.lat1, g.lon1]])
-    m.setView(bounds.getCenter(), m.getBoundsZoom(bounds, true) + 0.15) // terrain fills the frame at any size
-    m.setMaxBounds(bounds.pad(0.02))
+    // every post stays in view at any screen size (projector-safe), with room for labels, zoom buttons and chips
+    const fit = () => m.fitBounds(posts, { paddingTopLeft: [56, 64], paddingBottomRight: [140, 56], animate: false })
+    fit()
+    m.setMaxBounds(bounds) // stay on the terrain: past its edge only the contours' boundary lines would show
     relief(g).addTo(m)
     contourLayer(g).addTo(m)
     L.control.scale({ imperial: false, position: 'bottomright', maxWidth: 160 }).addTo(m)
     L.control.zoom({ position: 'topleft' }).addTo(m)
     layer.current = L.layerGroup().addTo(m)
     map.current = m
-    const ro = new ResizeObserver(() => m.invalidateSize())
+    const ro = new ResizeObserver(() => { m.invalidateSize(); fit() })
     ro.observe(el.current)
     return () => { ro.disconnect(); m.remove(); map.current = null }
-  }, [g])
+  }, [g, posts])
 
   useEffect(() => {
     const lg = layer.current
