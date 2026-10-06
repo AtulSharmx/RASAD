@@ -44,7 +44,8 @@ export const fmt = (n: number, d = 0) =>
 export const day = (iso: string) =>
   new Date(iso.slice(0, 10) + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
-export const lakh = (inr: number) => (inr >= 1e7 ? `₹${fmt(inr / 1e7, 2)} crore` : `₹${fmt(inr / 1e5, 1)} lakh`)
+export const lakh = (inr: number) =>
+  inr >= 1e7 ? `₹${fmt(inr / 1e7, 2)} crore` : inr >= 1e5 ? `₹${fmt(inr / 1e5, 1)} lakh` : `₹${fmt(inr)}`
 
 export const shortName = (name: string) => name.replace('Post ', '')
 

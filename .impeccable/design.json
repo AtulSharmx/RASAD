@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-06T07:30:00+05:30",
+  "title": "Design System: RASAD",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "primary", "displayName": "Strip Ink" },
+      "bay-board": { "role": "neutral", "displayName": "Bay Board" },
+      "strip-paper": { "role": "neutral", "displayName": "Strip Paper" },
+      "mode-road": { "role": "secondary", "displayName": "Road Ochre" },
+      "mode-foot": { "role": "secondary", "displayName": "Foot Teal" },
+      "mode-heli": { "role": "secondary", "displayName": "Heli Blue" },
+      "mode-drone": { "role": "secondary", "displayName": "Drone Magenta" },
+      "status-urgent": { "role": "tertiary", "displayName": "Urgent Red" },
+      "errata-yellow": { "role": "tertiary", "displayName": "Errata Yellow" }
+    },
+    "typographyMeta": {
+      "cell-number": { "displayName": "Cell number", "purpose": "Strip values, dates, costs, KPIs." },
+      "holder-word": { "displayName": "Holder word", "purpose": "Mode word under the holder icon (Jeep, Heli, Drone)." }
+    },
+    "shadows": [
+      { "name": "strip", "value": "0 1px 0 rgba(22,33,43,.14), 0 2px 6px rgba(22,33,43,.10)", "purpose": "Paper strip resting in the bay." },
+      { "name": "popover", "value": "0 6px 22px rgba(22,33,43,.22)", "purpose": "Chip popovers and the guided-demo card." }
+    ],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(.2, 0, 0, 1)", "purpose": "State changes; the what-if cell flip (0.26s)." },
+      { "name": "press", "value": "scale .96, .15s", "purpose": "Button press feedback." }
+    ],
+    "breakpoints": [
+      { "name": "stack", "value": "1100px" },
+      { "name": "projector", "value": "1700px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Strip", "kind": "custom", "refersTo": "strip",
+      "description": "Signature component: mode holder plus fixed cells plus a why line.",
+      "html": "<article class=\"ds-strip\"><div class=\"ds-holder\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\"/><path d=\"M15 18H9\"/><path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62L18.3 9.38a1 1 0 0 0-.78-.38H14\"/><circle cx=\"17\" cy=\"18\" r=\"2\"/><circle cx=\"7\" cy=\"18\" r=\"2\"/></svg><span>Jeep</span></div><div class=\"ds-cells\"><div><small>Alpha</small><b>Kerosene</b></div><div><small>Lasts (80%)</small><b>4 d</b></div><div class=\"ds-due\"><small>Last road day (80%)</small><b>29 Oct</b></div></div></article>",
+      "css": ".ds-strip{display:grid;grid-template-columns:64px 1fr;background:#fffef9;border:1px solid #98a39b;border-radius:4px;box-shadow:0 1px 0 rgba(22,33,43,.14),0 2px 6px rgba(22,33,43,.10);font-family:Barlow,system-ui,sans-serif;color:#16212b}.ds-holder{background:#a86b00;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:700 19px/1 'Barlow Condensed',sans-serif;border-radius:3px 0 0 3px}.ds-cells{display:grid;grid-template-columns:1.4fr 1fr 1fr}.ds-cells>div{padding:6px 9px;border-right:1px solid #d3d9d3;display:grid}.ds-cells small{font-size:12px;color:#3a4651}.ds-cells b{font:700 22px/1.05 'Barlow Condensed',sans-serif}.ds-due b{color:#b8232b;border:2px solid currentColor;border-radius:4px;padding:0 5px;justify-self:start}"
+    },
+    {
+      "name": "Ink Button", "kind": "button", "refersTo": "button-ink",
+      "description": "Primary action.",
+      "html": "<button class=\"ds-btn-ink\">Find the best base</button>",
+      "css": ".ds-btn-ink{background:#16212b;color:#fff;border:0;border-radius:7px;padding:8px 15px;font:600 15px Barlow,sans-serif;cursor:pointer;transition:background-color .15s,scale .15s}.ds-btn-ink:hover{background:#24323f}.ds-btn-ink:active{scale:.96}.ds-btn-ink:focus-visible{outline:3px solid #2d5fc4;outline-offset:2px}"
+    },
+    {
+      "name": "Approve Button", "kind": "button", "refersTo": "button-approve",
+      "description": "Commander approval on a plan line.",
+      "html": "<button class=\"ds-btn-approve\">Approve</button>",
+      "css": ".ds-btn-approve{background:#1d6f43;color:#fff;border:0;border-radius:7px;padding:5px 10px;font:600 14px Barlow,sans-serif;cursor:pointer;transition:background-color .15s,scale .15s}.ds-btn-approve:hover{background:#185c38}.ds-btn-approve:active{scale:.96}.ds-btn-approve:focus-visible{outline:3px solid #2d5fc4;outline-offset:2px}"
+    },
+    {
+      "name": "Provenance Chips", "kind": "chip", "refersTo": "chip-real",
+      "description": "Real, Simulated and PLACEHOLDER plies; each opens its source.",
+      "html": "<span class=\"ds-chip ds-real\">Real data</span> <span class=\"ds-chip ds-sim\">Simulated</span> <span class=\"ds-chip ds-ph\">PLACEHOLDER</span>",
+      "css": ".ds-chip{display:inline-flex;font:600 11.5px/1 Barlow,sans-serif;padding:4px 7px;border-radius:4px;border:1px solid #16212b;color:#16212b;background:#fffef9}.ds-real{background:#16212b;color:#fff}.ds-sim{border-style:dashed;background:repeating-linear-gradient(135deg,#fff 0 4px,#e6eaee 4px 8px)}.ds-ph{background:#ffe36e;border-color:#a68a00}"
+    },
+    {
+      "name": "Nav Rail Item", "kind": "nav", "refersTo": "nav",
+      "description": "Icon over word; current screen is an ink tile.",
+      "html": "<a class=\"ds-nav\" aria-current=\"page\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z\"/><path d=\"M9 3v15M15 6v15\"/></svg>Dashboard</a>",
+      "css": ".ds-nav{display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px;border-radius:8px;color:#3a4651;font:600 12px Barlow,sans-serif;text-decoration:none}.ds-nav[aria-current=page]{background:#16212b;color:#fff}.ds-nav:hover{background:#c5ccc4}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Strip Bay",
+    "overview": "RASAD treats every supply movement the way an IAF air-traffic controller treats a flight: as a paper strip in a bay. A strip has fixed cells (who, how long the stock lasts, the last road day) and a coloured holder that names the transport mode. The commander reads the bay from top to bottom, most urgent first, and stamps the strip to approve it. The world is light and calm, because it is shown on projectors and read by officers who want the decision, not decoration.",
+    "keyCharacteristics": [
+      "Light bay board, paper strips, ink type; no dark command-centre look.",
+      "Mode is always icon + word + colour, never colour alone.",
+      "Every number carries a unit; every recommendation carries a one-line why and a confidence.",
+      "Data provenance shows as small plies: Real (solid ink), Simulated (dashed hatch), PLACEHOLDER (yellow errata slip)."
+    ],
+    "rules": [
+      { "name": "The Holder Rule", "body": "A transport mode is shown in its holder colour together with its icon and its word (Jeep, Mule, Porter, Heli, Drone). Status colours are never used for modes.", "section": "colors" },
+      { "name": "The Ply Rule", "body": "Provenance is a ply, not a paragraph: Real is solid ink, Simulated is a dashed hatched ply, PLACEHOLDER is a yellow errata slip. Details live in the chip's popover.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "One family (Barlow) at every size; the condensed width is the only change of voice.", "section": "typography" }
+    ],
+    "dos": [
+      "Do pair every mode colour with its icon and word.",
+      "Do show units on every number and \"(80%)\" on every confidence-bearing date or band.",
+      "Do put cost multiples next to their inputs and a PLACEHOLDER chip.",
+      "Do keep text in ink tokens; colour carries identity or status, not sentences."
+    ],
+    "donts": [
+      "Don't use camouflage, hacker green, glowing radar or a dark command-centre theme.",
+      "Don't show international boundary lines on any map.",
+      "Don't reuse status colours (red, amber, green) for transport modes or chart series.",
+      "Don't add eyebrow labels above headings or decorate with gradients and glass."
+    ]
+  }
+}
