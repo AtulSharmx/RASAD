@@ -70,8 +70,9 @@ def live_refresh():
     """Live mode: download a fresh 16-day forecast (needs internet). The old cache stays if offline."""
     try:
         realdata.fetch_forecast()
-    except (urllib.error.URLError, TimeoutError) as e:
-        raise HTTPException(503, f"No internet - still using the cached forecast ({e})")
+    except (urllib.error.URLError, TimeoutError, OSError):
+        cached = pd.Timestamp(realdata.FORECAST.stat().st_mtime, unit="s").strftime("%d %b %Y") if realdata.FORECAST.exists() else "none"
+        raise HTTPException(503, f"No internet connection. RASAD keeps using the saved forecast (downloaded {cached}).")
     adapters.sync({"open_meteo_forecast"})
     clear_caches()
     return adapters.status()

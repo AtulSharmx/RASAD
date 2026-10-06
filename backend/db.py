@@ -64,7 +64,10 @@ def columns(table: str) -> list[str]:
 
 def init(reset: bool = False) -> None:
     if reset:
-        DB_PATH.unlink(missing_ok=True)
+        try:
+            DB_PATH.unlink(missing_ok=True)
+        except PermissionError:
+            raise SystemExit("The database is in use. Close the RASAD window (start.bat) first, then try again.")
     with connect() as con:
         con.executescript(SCHEMA)
         con.execute("DELETE FROM nodes")

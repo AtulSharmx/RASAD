@@ -96,6 +96,16 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - Audit (impeccable): the detector's layout-animation finding was fixed. The one remaining finding is a false positive (the legend line swatch). Also fixed: white-on-ochre contrast (3.4 → 4.4:1), a stacked layout below 1100px, rupee formatting, and the demo text.
   - Screenshots: `screenshots/01-…12-` (all 8 screens at 1366×768, the dashboard at 1920×1080, guided demo moments 1 and 3).
 
+- **Step 10 (6 Oct 2026): docs and dry run.**
+  - `README.md` (one-click start, demo roles, Real / Simulated / PLACEHOLDER), `docs/EXPLAIN_SIMPLY.md` (Hinglish, 22 jury questions with English one-liners), `docs/DEMO_SCRIPT.md` (3-minute script matching the 7 Guided demo moments, plus a 1-minute version), `docs/TROUBLESHOOTING.md` (Hinglish).
+  - `start.bat`: opens the browser if RASAD is already running; runs `npm install` only when `node_modules` is missing (an offline fresh build works).
+  - `reset_demo.bat`: refuses while RASAD is running; `db.init` gives a clear message if the database is locked. Live refresh offline returns "No internet connection. RASAD keeps using the saved forecast (downloaded …)".
+  - **Dry run (internet blocked for RASAD with a dead proxy):**
+    - Deleted the DB and `frontend/dist`, then ran `start.bat`: it built, generated the data and served in about 1 minute.
+    - All 7 Guided demo moments checked (screen, spotlight, Say line). Approve → audit row.
+    - `reset_demo.bat` while running → refused; after stopping → reset in ~4 s; `start.bat` again → audit empty, all 8 plan lines pending.
+    - Double `start.bat` → just opens the browser. Live mode offline → works from the cached forecast (11 s).
+
 ## Known limits (say these honestly)
 - **Roles are demo-only.** The brief asks for demo roles with no real login, so `role` and `user` come from the request (the role picker). Anyone who can reach the API can claim "Commander". Mitigations: the server listens only on 127.0.0.1, and FastAPI parses only JSON bodies, which blocks simple cross-site form posts. Production would take the identity from Army SSO/PKI and map roles on the server. An automated security review flagged this on 5 Oct; it was acknowledged and documented, not fixed (by design for the demo).
 
@@ -103,8 +113,7 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
 - Live mode recomputes everything on first use (~30–60 s); Demo mode is pre-computed at server start.
 
 ## Next
-- Step 9 (SHOULD, if time): consumption anomaly alerts (ground truth in `data/anomaly_truth.json`), then the QM stock-update page with QR.
-- Step 10: README (one-click start, demo roles, what is simulated), `docs/EXPLAIN_SIMPLY.md` (Hinglish + jury Q&A), `docs/DEMO_SCRIPT.md` (3 minutes; the Guided demo already carries the lines), a final dry run.
+- Step 9 (only if usage is left, lean): consumption anomaly alerts, including the silent IoT sensor at Post Hotel. Ground truth: `data/anomaly_truth.json` (PB rations ×10 on 14 Aug = data error; PH kerosene ×1.45 on 10–24 Sep = possible pilferage; PC medical ×3 on 8–14 Sep = genuine surge). Skip the QM QR page.
 
 ## How to run
 - Double-click `start.bat` (the first run sets things up) and open http://localhost:8000. `reset_demo.bat` rebuilds the demo data.

@@ -1,0 +1,191 @@
+# RASAD, aasaan bhasha mein
+
+Ye document team ke liye hai. Isme bina technical shabdon ke samjhaya hai ki RASAD ka har hissa kya karta hai, aur jury ke likely sawalon ke chhote jawab hain. Numbers app ki Demo date (25 Oct 2026) ke hain, jaise 6 Oct 2026 ko the; app hamesha apne numbers khud calculate karta hai.
+
+---
+
+## 1. RASAD ek line mein
+
+Sardi aane se pehle pahadon ke posts tak saaman (ration, kerosene, dawai, battery, garam kapde) pahunchana hota hai. Raste (passes) barf se band ho jaate hain. RASAD batata hai: **kaunsa post kab khatam hoga, raasta kab tak khula rahega, aakhri din kaunsa hai jab truck bhejna safe hai, kaunsa saaman kis tareeke se jaaye (truck, jeep, mule, porter, helicopter, drone), aur kitna kharcha hoga.** Commander har sujhaav ko approve, badal ya reject karta hai, aur sab audit log mein likha jaata hai.
+
+## 2. Data kahan se aata hai (10 "streams")
+
+Sochiye 10 alag registers hain, aur RASAD sabko ek jagah jodkar ek tasveer banata hai.
+
+| Stream | Asli ya nakli? | Asal mein kahan se aayega |
+|---|---|---|
+| Stock (kitna saaman pada hai) | Nakli (simulated) | Army ka CICG inventory system |
+| Roz ki khapat (kitna use hua) | Nakli | CICG |
+| IoT fuel sensor (tank mein kitna tel) | Nakli | Post par lage sensors |
+| Raste ka haal (khula/band) | Nakli | BRO ka road bulletin |
+| Helicopter ke ghante | Nakli | IAF ka airlift schedule |
+| Purana mausam (1995 se) | **Asli** | Open-Meteo (free, public) |
+| Agle 16 din ka mausam | **Asli** | Open-Meteo forecast (Live mode) |
+| Zameen ki oonchai | **Asli** | Copernicus DEM (European satellite data) |
+| Sadkein, passes, shahar | **Asli** | OpenStreetMap |
+| Demo ka aage ka mausam | Nakli | Oct 2021 ka asli mausam copy kiya (us saal jaldi barf giri thi) |
+
+Military data classified hota hai, isliye wo nakli (simulated) hai. App mein har jagah chhote "Simulated" ya "Real data" chips lage hain, aur unpar mouse le jaane se source dikhta hai.
+
+## 3. Forecast: kitna saaman roz lagega
+
+- RASAD har post aur har saaman ke liye agle din se lekar raste khulne tak (May–June) ka roz ka andaaza lagata hai.
+- Thand badhti hai to kerosene zyada lagta hai; jitni oonchi post, utni thand. Isliye mausam (asli) aur oonchai (asli) dekhkar andaaza lagta hai.
+- Har andaaze ke saath ek **range (band)** hoti hai: "4 din, 3 se 5 ke beech, 80% bharosa".
+- Do tareeke aapas mein muqabla karte hain:
+  1. **Machine-learning model** (LightGBM): mausam, oonchai, saal ka din dekhkar sikhta hai.
+  2. **Simple tareeka**: pichhle 28 din ka average.
+- **Jo tareeka behtar nikle, wahi use hota hai.** Imaandari ke liye: tareeka ek pehle ke 60 din (27 Jun–25 Aug) par chuna jaata hai, aur score aakhri 60 din (26 Aug–24 Oct) par naapa jaata hai, jo chunav mein use hi nahi hue.
+- Nateeja: **sirf kerosene ke liye model jeeta** (galti 9%, jabki average ki 39%), kyunki kerosene thand ke saath tezi se badalta hai. Ration, dawai, battery, kapde ke liye simple average utna hi achha tha, to wahi use hota hai. Ye screen par "method aur why" mein likha hai.
+- Band ko 80% ke aas-paas sahi baithaya gaya hai: aakhri 60 din mein 79–89% asli din band ke andar the.
+
+## 4. "Kitne din chalega" (days of cover)
+
+Stock ko roz ke andaaze se din-ba-din ghataate hain; jis din stock khatam, wo din. Range ke saath dikhata hai, jaise "4 din (3–5)".
+
+## 5. Point of No Return: aakhri safe din
+
+- Passes ek fix date par band nahi hote. Isliye RASAD ek **niyam** seekhta hai asli band hone ki dates se:
+  - **Zoji La** gehri barf se band hota hai: "is sardi mein 210 cm barf ho chuki ho aur 3 din mein 20 cm aur gire, ya 7 din ka ausat thand −15.5 °C tak pahunche".
+  - **Manali–Leh** zyada thand aur barf jamne (ice) se band hota hai: "7 din ka ausat −15.5 °C, ya 3 din mein 44 cm barf".
+- Phir is sardi ke ab tak ke mausam ke baad **pichhli 31 asli sardiyon (1995–2025) ka mausam ek-ek karke chalaate hain**: "agar baaki sardi 1995 jaisi rahe to raasta kab band hoga? 1996 jaisi? ..." Isse 31 alag tareekhein milti hain, yani ek **probability**.
+- "**80% confidence**" ka matlab: wo din jab tak 80% chance hai ki raasta khula rahega.
+- **Aakhri safe dispatch din** = wo din − safar ke din − 1 din loading.
+- Iske baad sirf hawai raasta bachta hai, to RASAD helicopter ke sorties, ghante aur kharcha dikhata hai.
+- Imaandari: hamare paas sirf 4–5 saal ki band hone ki dates hain. Har saal ko alag rakhkar jaancha to galti Zoji La par ~13 din aur Manali–Leh par ~18 din aayi. Ye number screen par likha hai.
+- Aage ke chhote tracks (fictional) ke niyam PLACEHOLDER hain.
+
+## 6. Mixed-fleet plan: kaunsa saaman kis tareeke se
+
+Google ka OR-Tools ek "puzzle solver" hai. RASAD use 7 din ka puzzle deta hai:
+- Kaunse posts ko kitna saaman chahiye, aur kitna jaldi.
+- Har tareeke ki seemayein: truck/jeep raasta khula ho tabhi, aur **sirf Point of No Return se pehle**; mule 40 kg, porter 20 kg, helicopter oonchai ke hisaab se kam payload; **drone 15 kg** (12,000–20,000 ft wale band mein, Army RFP ke hisaab se), 10 km range, aur pahad ke upar 400 m oonchai se udna zaroori.
+- Mausam: helicopter aur drone sirf un dino jab hawa, barf aur baadal seema ke andar hon.
+- Kitne mule, porter, jeep, helicopter ghante, drone aur batteries hain.
+
+Solver sabse kam kharche wala plan dhoondhta hai, lekin zaroori saaman (dawai sabse pehle) pehle bhejta hai. Har line ke saath **ek seedhi wajah, kharcha aur assumptions** likhe hote hain.
+
+Demo mein:
+- **Delta:** track barf se band hai, isliye dawai drone se jaati hai (19 sorties, 26 Oct).
+- **Alpha:** kerosene 29 Oct se pehle jeep se jaata hai.
+- **Foxtrot:** ration aaj mule aur porter se, baaki helicopter se, kyunki drone base 19 km door hai.
+
+## 7. Drone advisor
+
+Army 2,715 drones kharidne ki RFI laayi hai. Sawal hai ki drones kahan rakhein. RASAD har sambhav base par drones rakh kar poora plan dobara chalata hai, aur dekhta hai ki kitne helicopter sorties aur kitne rupaye bachte hain. Demo mein **Node Mike par 20 drones** rakhne se Foxtrot ke helicopter sorties **30 se 0** ho jaate hain aur **~₹1.67 crore** is hafte bachta hai.
+
+## 8. What-if
+
+Ek click mein: "pass 10 din pehle band ho jaye", "blizzard 3 din helicopter rok de", "Alpha–Charlie mein 20% zyada troops", "20 drones aa jayein". RASAD sab dobara calculate karke pehle aur baad dikhata hai, aur badle hue khaane peele ho jaate hain.
+
+## 9. Commander ka faisla aur audit log
+
+Har plan line par Approve / Modify / Reject hai. Approve aur reject sirf Commander kar sakta hai; modify Commander ya Logistics Officer; Post QM sirf dekh sakta hai. Har faisla (kisne, kab, pehle kya tha, baad mein kya) audit log mein jaata hai.
+
+## 10. Naya data kaise judta hai
+
+Har stream ke liye ek chhoti config file hai (`sources/` folder). Usme likha hai ki file kahan hai, kaunsa column kya hai, aur codes ka matlab kya hai. Naya stream jodna = ek nayi file daalna aur "Sync all now" dabana. App ka code nahi badalta, aur Army ke purane systems ko chhoona bhi nahi padta.
+
+---
+
+## Jury ke likely sawal aur chhote jawab
+
+Har sawal ke saath "Bolne ke liye" wali line English mein hai, taaki seedha bol sakein.
+
+**1. Is the military data safe? Why on-premise?**
+Sab kuch ek laptop par chalta hai (asal mein Army ke apne network par). Koi cloud nahi; server sirf laptop ke andar (127.0.0.1) sunta hai, bahar se koi nahi jud sakta.
+*Bolne ke liye:* "Nothing leaves the machine. It runs fully on-premise, on the Army's own network in deployment; no cloud."
+
+**2. Where would the real data come from?**
+CICG (Army ka inventory system), IQMP / Q-FORCE (unit logistics apps), post ke IoT sensors, BRO ka road bulletin, IAF ka airlift schedule. Abhi ye simulated hain kyunki asli data classified hai.
+*Bolne ke liye:* "In deployment, stock and consumption come from CICG through adapters; roads from BRO, airlift from IAF, fuel levels from post sensors."
+
+**3. What is real and what is simulated?**
+Asli: mausam (1995 se), 16-din forecast, zameen ki oonchai, sadkein aur passes, passes ke band hone ki dates, drone RFI ke numbers. Nakli: posts, stock, khapat, troops, sensors, road bulletin, helicopter ghante. Har screen par chips se dikhta hai.
+*Bolne ke liye:* "Weather, terrain, roads and closure dates are real public data; all military data is simulated and labelled as such."
+
+**4. How accurate is your forecast?**
+Aakhri 60 din par (jo chunav mein use nahi hue): kerosene 9% galti, ration ~6%, battery ~16%, dawai ~30%, kapde ~34%. 79–89% din range ke andar. Ye simulated data par hai; asli accuracy asli CICG data par hi pata chalegi.
+*Bolne ke liye:* "On held-out days, kerosene is within 9 percent versus 39 percent for a simple average. These are measured on simulated data, and we say so on screen."
+
+**5. Why does only kerosene use the machine-learning model?**
+Kyunki sirf kerosene mein model saaf taur par jeeta. Baaki mein simple average utna hi achha tha, aur hum simple tareeke ko tab tak rakhte hain jab tak model saaf behtar na ho.
+*Bolne ke liye:* "We pick whichever method wins on earlier data. Kerosene depends strongly on cold, so the model wins there; for the rest a 28-day average was just as good."
+
+**6. How is the pass-closure probability calculated?**
+Asli band hone ki dates se niyam seekha (barf ya thand). Phir is sardi ke baad pichhli 31 asli sardiyon ka mausam chalaya, aur 31 tareekhon se probability nikali. "80% confidence" = 80% chance raasta khula hai.
+*Bolne ke liye:* "We replay this winter against 31 real past winters of weather, using a rule fitted on real closure dates; that gives a closure window with a probability, not a fixed date."
+
+**7. How accurate is the closure rule?**
+Har saal ko alag rakhkar jaancha: Zoji La ~13 din, Manali–Leh ~18 din. Dates sirf 4–5 saal ki hain, isliye ye bada nahi; asli BRO data se behtar hoga.
+*Bolne ke liye:* "Tested on each past winter it was not trained on, it is within about two weeks. That is why we plan at 80 percent confidence, not the middle date."
+
+**8. Why is air about 220 times costlier?**
+Ek hi source se do numbers: truck ₹1 lakh mein 10 tonne Srinagar se Leh (yani ₹0.024 per kg per km), aur helicopter ₹4 lakh per 45 minute (The Week, 2020). Alpha tak road ₹3.8/kg, helicopter ₹844/kg (oonchai par kam payload). Ye PLACEHOLDER hai aur screen par inputs ke saath likha hai.
+*Bolne ke liye:* "It is road ₹3.8 versus helicopter ₹844 per kg for Alpha, from one public 2020 report; it is tagged as a placeholder and the inputs are shown."
+
+**9. What are your drone assumptions?**
+Public: 15 kg 12,000–20,000 ft par, 20 kg neeche (Army RFP), 10 km range (RFI), Sabal-20 jaisi speed aur endurance. PLACEHOLDER: 2 batteries per drone, 90 min charge, 5 min swap, 8 ghante udaan, hawa 35 km/h tak, ₹1,500 per sortie. Har drone leg asli zameen se 400 m upar udna chahiye.
+*Bolne ke liye:* "Payload and range come from the Army's own RFIs; batteries, wind limits and cost are placeholders, shown on every plan line."
+
+**10. How does the drone advisor decide where to base drones?**
+Har sambhav base par drones rakh kar poora plan dobara banata hai, aur jahan sabse zyada helicopter sorties aur paisa bachta hai, wo jeetta hai.
+*Bolne ke liye:* "It re-plans the week with the drones at each candidate base and ranks the bases by the helicopter hours and money saved."
+
+**11. How does it connect to existing Army systems?**
+Purane systems ko badalta nahi. Unki export file padhta hai, ek config file ke zariye. HQ IDS ka Joint Primer (Aug 2025) bhi yahi kehta hai: API se jodo, purane systems ko disturb kiye bina.
+*Bolne ke liye:* "It reads exports from CICG and other systems through adapters, exactly the 'interoperability without disrupting existing platforms' the tri-service Joint Primer recommends."
+
+**12. What happens if the internet is down?**
+Kuch nahi hota. Sab kuch laptop par saved hai. Sirf Live mode ka "naya forecast download" internet maangta hai; tab bhi pichhla saved forecast chalta rehta hai.
+*Bolne ke liye:* "It works fully offline. Only refreshing the live weather forecast needs internet, and the last forecast stays cached."
+
+**13. How is a new data source added?**
+`sources/` folder mein ek config file, aur "Sync all now". Code nahi badalta.
+*Bolne ke liye:* "One config file per data stream; add a file, press sync, and it appears with its health status."
+
+**14. What if the commander disagrees with the plan?**
+Modify (matra badlo) ya Reject. Har faisla audit log mein.
+*Bolne ke liye:* "The system recommends; the commander decides. Every approve, change or reject is logged with who and when."
+
+**15. Who can approve? Is there a login?**
+Demo mein role picker hai (Commander, Logistics Officer, Post QM). Asal mein Army ka apna login (SSO/PKI) hoga.
+*Bolne ke liye:* "Roles are demo-only here; in deployment the identity comes from the Army's own login."
+
+**16. Why not use a fixed closure date like everyone else?**
+Kyunki har saal alag hota hai: Zoji La kabhi Dec mein band hua, kabhi Feb mein. Fixed date ya to bekaar jaldi karwati hai ya der.
+*Bolne ke liye:* "Closures vary by weeks year to year; a probability window tells you how much risk you take by waiting."
+
+**17. What is the IoT sensor doing? What if a sensor fails?**
+Har post ke tank par sensor har 4 ghante level bhejta hai, jo CICG se zyada taaza hota hai. Post Hotel ka sensor 23 Oct se chup hai; Sources page par warning dikhti hai aur RASAD apne aap CICG ka number use karta hai.
+*Bolne ke liye:* "Sensors give fresher fuel levels; a silent sensor is flagged and the system falls back to the inventory figure."
+
+**18. How did you make sure the fictional posts are not real locations?**
+Posts ke naam aur jagah fictional hain, Ladakh ke andar ki taraf. Har post kisi bhi border/LoC/LAC se 60 km se zyada door hai, aur OpenStreetMap ki kisi military jagah se 12 km se zyada. Map par koi international boundary nahi dikhti.
+*Bolne ke liye:* "All posts are fictional, at least 60 km from any boundary, and we never draw boundary lines."
+
+**19. Aren't mules being phased out? Why plan with them?**
+Army ne Animal Transport units band karna ~2032 tak taal diya hai (SP's Land Forces, Nov 2025). Aage ka raasta mixed fleet hai: truck + helicopter + mule + porter + drone.
+*Bolne ke liye:* "The Army has deferred disbanding mule units to around 2032; the near future is a mixed fleet, which is what we plan."
+
+**20. How is this different from other teams?**
+Drones ek asli tareeke ki tarah (RFI payload, battery, zameen), drone basing advisor, band hone ki **probability** (fixed date nahi) dono rasto ke liye, mixed-fleet plan har line ki wajah ke saath, adapters, aur har number ke saath source tag.
+*Bolne ke liye:* "Drones as a real mode with a basing advisor, closure as a probability window, a mixed-fleet plan with reasons, and plug-in adapters."
+
+**21. Can it handle a real sector with many more posts?**
+Haan. Solver chhote problem ko second mein hal karta hai; zyada posts par bhi kuch seconds. Asli data adapters se aayega.
+*Bolne ke liye:* "The planner solves this week in seconds; a bigger sector adds seconds, not hours."
+
+**22. What does PLACEHOLDER mean?**
+Wo numbers jo hume public source mein nahi mile, jaise kharcha, mule ki ginti, battery. App mein peele chips se dikhte hain aur `docs/PLACEHOLDERS.md` mein list hain. User unit asli numbers dalegi.
+*Bolne ke liye:* "Numbers without a public source are tagged as placeholders, on screen and in a list, for the user unit to replace."
+
+## Kamiyan (limitations), imaandari se
+
+- Military data simulated hai; accuracy asli CICG data par hi pata chalegi.
+- Band hone ka niyam sirf 4–5 saal ki dates se seekha hai; galti ~2 hafte.
+- Kharche ek 2020 news report se hain (PLACEHOLDER).
+- Aage ke tracks kab band honge, uske niyam PLACEHOLDER hain.
+- Drone base ke liye maana gaya hai ki use raasta band hone se pehle stock kar diya gaya.
+- Roles demo ke liye hain, asli login nahi.
+- Live mode pehli baar 30–60 sec leta hai; laptop aur projector ke liye bana hai, phone ke liye nahi.
