@@ -82,13 +82,32 @@ Backup: private GitHub repo https://github.com/AtulSharmx/RASAD. **After every s
   - `backend/scenarios.py`: 4 what-ifs (pass −10 days via `closure.run(shift=-10)`, blizzard via `planner.plan(grounded_days=3)`, troops +20% via `closure.run(strength=...)`, 20 drones at the best base). Each returns before/after KPIs and plain change lines, with a note when the cost falls only because loads did not move.
   - API: `/api/drones?mode=&n=&band=`, `/api/scenarios?mode=`, `/api/costs`. A background warm-up at server start pre-computes the demo; cold calls take ~25–30 s.
 
+- **Step 7 + 8 (6 Oct 2026): the UI**, design-first with impeccable + frontend-design + make-interfaces-feel-better + dataviz.
+  - `PRODUCT.md` (confirmed: real-Army-tool first, English only, "RASAD रसद"). Two directions were shown as dashboard screenshots (`docs/design-directions/`). Atul chose **A "Strip Bay"** (IAF flight-progress strips), with B's toposheet map on the dashboard. The direction contract is in `.impeccable/surfaces/frontend-src-app-tsx.md`; `DESIGN.md` + `.impeccable/design.json` record the built system.
+  - React app (`frontend/src`):
+    - `App.tsx` shell: top rail with Demo/Live, Guided demo and role picker; nav rail; bottom rail with closure windows, source health and on-premise.
+    - `SectorMap.tsx`: offline Leaflet map with the real DEM relief, 200 m contours, OSM roads, legend, scale bar and red numbered rings.
+    - `ui.tsx`: provenance chips with popovers; mode holders with icon + word (helicopter and drone glyphs authored in Lucide style).
+    - `charts.tsx`: forecast band chart and closure curve, with hover.
+    - Screens: Dashboard, PostDetail, Pnr, Plan (Approve/Modify/Reject by role), Drones, WhatIf (flip cells), Sources (config viewer, sync, live refresh), Audit.
+    - `GuidedDemo.tsx`: 7 moments, Next/Back/Esc, spotlight, a data-driven "Say" line. `#/dashboard?demo=3` opens moment 3.
+  - Mode colours validated with the dataviz script: road #a86b00, foot #00917f, heli #2d5fc4, drone #b0428f. Status colours are reserved.
+  - Backend: `/api/terrain`. The DEM grid now covers 33.80–34.45 N, 76.35–77.65 E (3,848 points). `index.html` is sent with `no-cache`.
+  - Audit (impeccable): the detector's layout-animation finding was fixed. The one remaining finding is a false positive (the legend line swatch). Also fixed: white-on-ochre contrast (3.4 → 4.4:1), a stacked layout below 1100px, rupee formatting, and the demo text.
+  - Screenshots: `screenshots/01-…12-` (all 8 screens at 1366×768, the dashboard at 1920×1080, guided demo moments 1 and 3).
+
 ## Known limits (say these honestly)
 - **Roles are demo-only.** The brief asks for demo roles with no real login, so `role` and `user` come from the request (the role picker). Anyone who can reach the API can claim "Commander". Mitigations: the server listens only on 127.0.0.1, and FastAPI parses only JSON bodies, which blocks simple cross-site form posts. Production would take the identity from Army SSO/PKI and map roles on the server. An automated security review flagged this on 5 Oct; it was acknowledged and documented, not fixed (by design for the demo).
 
+- The UI is built for laptop and projector (1366–1920 wide); below 1100px it stacks, but there is no phone layout.
+- Live mode recomputes everything on first use (~30–60 s); Demo mode is pre-computed at server start.
+
 ## Next
-- **Step 7: the UI** (most important for the jury). Use the design skills, laptop 1366×768, a calm ops-tool look. Screens: Dashboard map (OSM roads, real passes, fictional posts, drone legs) + "3 posts at risk"; Post detail (forecast band, method + why); Point of No Return (closure curve, last safe dispatch, cost with inputs); Plan (lines, reasons, assumptions, daily drone schedule, Approve/Modify/Reject with a role picker); Drone advisor; What-ifs; Sources (labels Real/Simulated, health, config file); Audit log. Demo/Live mode toggle.
+- Step 9 (SHOULD, if time): consumption anomaly alerts (ground truth in `data/anomaly_truth.json`), then the QM stock-update page with QR.
+- Step 10: README (one-click start, demo roles, what is simulated), `docs/EXPLAIN_SIMPLY.md` (Hinglish + jury Q&A), `docs/DEMO_SCRIPT.md` (3 minutes; the Guided demo already carries the lines), a final dry run.
 
 ## How to run
 - Double-click `start.bat` (the first run sets things up) and open http://localhost:8000. `reset_demo.bat` rebuilds the demo data.
 - By hand: `.venv\Scripts\python -m backend.gen_data`, then `.venv\Scripts\python -m backend.selfcheck`.
+- Guided demo: press **Guided demo** in the top bar (or open `http://localhost:8000/#/dashboard?demo=1`). ←/→ to move, Esc to close.
 - UI dev mode: `cd frontend`, then `npm run dev` (with the API running on :8000). After UI changes, `npm run build` (start.bat only builds when `frontend/dist` is missing).

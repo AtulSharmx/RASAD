@@ -23,13 +23,14 @@ const NAV = [
   ['sources', 'Sources', Database], ['audit', 'Audit log', ScrollText],
 ] as const
 
-const parse = () => (location.hash.replace(/^#\/?/, '') || 'dashboard').split('/')
+const parse = () => (location.hash.replace(/^#\/?/, '').replace(/\?.*$/, '') || 'dashboard').split('/')
 
 export default function App() {
   const [route, setRoute] = useState(parse)
   const [mode, setMode] = useState<Mode>('demo')
   const [role, setRole] = useState<Role>('Commander')
-  const [demoStep, setDemoStep] = useState<number | null>(null)
+  // '#/dashboard?demo=3' opens the guided demo at moment 3 (handy to recover mid-presentation)
+  const [demoStep, setDemoStep] = useState<number | null>(() => { const m = location.hash.match(/demo=(\d)/); return m ? Math.min(7, Math.max(1, Number(m[1]))) - 1 : null })
   useEffect(() => {
     const on = () => setRoute(parse())
     window.addEventListener('hashchange', on)
