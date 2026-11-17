@@ -3,3 +3,9 @@ __pycache__/
 data/rasad.db
 frontend/node_modules/
 frontend/dist/
+
+# local agent/editor config, not part of the project
+CLAUDE.md
+AGENTS.md
+BUILD_PROMPT.md
+.claude/
