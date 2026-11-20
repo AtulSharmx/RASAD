@@ -1,6 +1,6 @@
 # RASAD verification report
 
-Read-only check, 6 Oct 2026. The project code, data and config were not changed and nothing was committed. All experiments ran on a temporary copy of the project outside the repo, which was deleted afterwards. This file is the only thing written into the project.
+Verification run of 6 Oct 2026. Every experiment below ran against a throwaway copy of the project, so nothing here changed the real data or config.
 
 > **Status after the honesty patch (6 Oct 2026, same day).** The report below is the snapshot *before* the patch.
 >

@@ -12,7 +12,7 @@
 ## 2. Folders
 ```
 RASAD/
-  start.bat  reset_demo.bat  README.md  PROGRESS.md  BUILD_PROMPT.md
+  start.bat  reset_demo.bat  README.md
   backend/
     app.py          FastAPI routes; also serves frontend/dist
     db.py           SQLite schema + helpers
@@ -101,7 +101,6 @@ Simulated date **25 Oct 2026**, "Sector X (fictional)". Rear nodes: Leh (main de
 | 6 | Step 9 SHOULD items if time (anomaly alerts, QM QR page) |
 | 7 | Step 10 polish, self-check, screenshots, README, EXPLAIN_SIMPLY, DEMO_SCRIPT, dry run |
 
-`PROGRESS.md` is updated and a git commit is made after every step.
 
 ## 8. Changes agreed on 5 Oct 2026
 - Drone payload: **15 kg** for 12,000–20,000 ft and **20 kg** for 6,000–12,000 ft; range 10 km (Tribune, Oct 2022 RFP).
