@@ -9,3 +9,6 @@ CLAUDE.md
 AGENTS.md
 BUILD_PROMPT.md
 .claude/
+
+# Local editor / agent config
+.impeccable/
