@@ -9,3 +9,5 @@ CLAUDE.md
 AGENTS.md
 BUILD_PROMPT.md
 .claude/
+.agents/
+.cursor/
